@@ -35,7 +35,7 @@ template:
                 forceNewDeployment: false
           - step:
               type: EcsBlueGreenCreateService
-              name: ECS blue/green create
+              name: ECS blue-green create
               identifier: ecs_bg_create
               timeout: 15m
               when:
@@ -58,10 +58,10 @@ template:
                 stageStatus: Success
                 condition: <+input>
               spec:
-                trafficShiftSteps:
-                  - weightPercentage: 10
-                  - weightPercentage: 50
-                  - weightPercentage: 100
+                ecsTrafficShiftWrapper:
+                  type: Inherit
+                  spec:
+                    weightPercentage: <+input>
           - step:
               type: ShellScript
               name: verify_version
@@ -107,7 +107,7 @@ template:
               spec: {}
           - step:
               type: EcsBlueGreenRollback
-              name: blue/green rollback
+              name: blue-green rollback
               identifier: bg_rollback
               timeout: 15m
               spec: {}
