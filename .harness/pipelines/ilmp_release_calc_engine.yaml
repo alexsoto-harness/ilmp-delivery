@@ -1,0 +1,10 @@
+pipeline:
+  name: ILMP Release calc-engine
+  identifier: ilmp_release_calc_engine
+  projectIdentifier: soto_sandbox
+  orgIdentifier: sandbox
+  description: PLACEHOLDER - full YAML follows in next commit
+  tags:
+    customer: spdji
+    demo: ilmp
+  stages: []
