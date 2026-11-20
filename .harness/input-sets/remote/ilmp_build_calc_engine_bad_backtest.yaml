@@ -1,0 +1,27 @@
+inputSet:
+  name: build calc-engine bad-backtest (rollback demo)
+  identifier: build_calc_engine_bad_backtest
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox
+  pipeline:
+    identifier: ilmp_build
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: hotfix/bad-backtest
+    variables:
+      - name: component
+        type: String
+        value: calc-engine
+      - name: release
+        type: String
+        value: "2026.12"
+      - name: change_type
+        type: String
+        value: emergency
+      - name: deploy
+        type: String
+        value: "true"
