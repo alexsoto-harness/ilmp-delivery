@@ -1,0 +1,27 @@
+inputSet:
+  name: build calc-engine 2026.12
+  identifier: build_calc_engine_2026_12
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox
+  pipeline:
+    identifier: ilmp_build
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: release/2026.12
+    variables:
+      - name: component
+        type: String
+        value: calc-engine
+      - name: release
+        type: String
+        value: "2026.12"
+      - name: change_type
+        type: String
+        value: standard
+      - name: deploy
+        type: String
+        value: "true"
