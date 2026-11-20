@@ -1,0 +1,11 @@
+release: "2026.12"
+components:
+  calc-engine:
+    image: "759984737373.dkr.ecr.us-east-1.amazonaws.com/ilmp/calc-engine"
+    tag: "2026.12-ec1f7d3-10"
+    digest: "sha256:4b854bdd38d5443700dcf7ff28e7e6cbc6a1eb3060420d6daa653c259c64d7d1"
+    commit: "ec1f7d31bdb9c94a077fae1ad48e9827cb58b228"
+    build_url: "https://app.harness.io/ng/#/account/EeRjnXTnS4GrLG5VNNJZUw/ci/orgs/sandbox/projects/soto_sandbox/pipelines/ilmp_build/executions/32djgujFTTqfWgVlgrhVAw/pipeline"
+    eval_verdict: "PASS"
+    eval_score: "100"
+    recorded_at: "2026-11-20T03:56:30Z"
