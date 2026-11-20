@@ -3,7 +3,9 @@ service:
   identifier: ilmp_calc_engine
   orgIdentifier: sandbox
   projectIdentifier: soto_sandbox
-  description: SPDJI ILMP calc engine (Python FastAPI) on ECS Fargate. Artifact from ECR (same digest as HAR).
+  description: SPDJI ILMP calc engine (Python FastAPI) on ECS Fargate. Artifact
+    from ECR (same digest as HAR). Per-service deploy settings live in service
+    variables so one multi-service pipeline stage can deploy both components.
   tags:
     customer: spdji
     demo: ilmp
@@ -56,3 +58,42 @@ service:
         - name: VERSION_PATH
           type: String
           value: /version
+        - name: BASE_URL
+          type: String
+          value: <+env.variables.base_url_calc>
+        - name: SMOKE_SCRIPT
+          type: String
+          value: smoke-backtest.sh
+        - name: EXPECTED_DIGEST
+          type: String
+          value: <+input>
+        - name: BG_QADR_PROD_LISTENER_ARN
+          type: String
+          value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener/app/ilmp-demo-alb/f3c915c2d376d66b/c68b799777e3c55e
+        - name: BG_QADR_PROD_RULE_ARN
+          type: String
+          value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener-rule/app/ilmp-demo-alb/f3c915c2d376d66b/c68b799777e3c55e/d1254b2f2370ce28
+        - name: BG_QADR_STAGE_LISTENER_ARN
+          type: String
+          value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener/app/ilmp-demo-alb/f3c915c2d376d66b/c41a47c9c1a394f7
+        - name: BG_QADR_STAGE_RULE_ARN
+          type: String
+          value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener-rule/app/ilmp-demo-alb/f3c915c2d376d66b/c41a47c9c1a394f7/63b4976dfb698946
+        - name: BG_PROD_PROD_LISTENER_ARN
+          type: String
+          value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener/app/ilmp-demo-alb/f3c915c2d376d66b/b9d54234f6e0be8e
+        - name: BG_PROD_PROD_RULE_ARN
+          type: String
+          value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener-rule/app/ilmp-demo-alb/f3c915c2d376d66b/b9d54234f6e0be8e/7d6049da2f10c964
+        - name: BG_PROD_STAGE_LISTENER_ARN
+          type: String
+          value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener/app/ilmp-demo-alb/f3c915c2d376d66b/bfb36b56c21fe21a
+        - name: BG_PROD_STAGE_RULE_ARN
+          type: String
+          value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener-rule/app/ilmp-demo-alb/f3c915c2d376d66b/bfb36b56c21fe21a/96b3c75258675713
+        - name: BG_QADR_STAGE_BASE_URL
+          type: String
+          value: http://ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com:9083
+        - name: BG_PROD_STAGE_BASE_URL
+          type: String
+          value: http://ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com:8080

@@ -114,6 +114,8 @@ pipeline:
                   identifier: deploy
                   timeout: 15m
                   spec:
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
                     sameAsAlreadyRunningInstances: false
                     forceNewDeployment: false
               - step:
@@ -157,7 +159,9 @@ pipeline:
                   name: Rollback
                   identifier: rollback
                   timeout: 15m
-                  spec: {}
+                  spec:
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
         failureStrategies:
           - onFailure:
               errors:
@@ -251,6 +255,8 @@ pipeline:
                       identifier: deploy
                       timeout: 15m
                       spec:
+                        delegateSelectors:
+                          - harness-eks-delegate-parson
                         sameAsAlreadyRunningInstances: false
                         forceNewDeployment: false
                   - step:
@@ -294,7 +300,9 @@ pipeline:
                       name: Rollback
                       identifier: rollback
                       timeout: 15m
-                      spec: {}
+                      spec:
+                        delegateSelectors:
+                          - harness-eks-delegate-parson
             failureStrategies:
               - onFailure:
                   errors:
@@ -360,6 +368,8 @@ pipeline:
                       identifier: bg_create
                       timeout: 15m
                       spec:
+                        delegateSelectors:
+                          - harness-eks-delegate-parson
                         loadBalancer: <+env.variables.alb_name>
                         prodListener: <+serviceVariables.BG_QADR_PROD_LISTENER_ARN>
                         prodListenerRuleArn: <+serviceVariables.BG_QADR_PROD_RULE_ARN>
@@ -382,7 +392,7 @@ pipeline:
                               set -e
                               D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>
                               rm -rf "$D" && git clone -q --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git "$D"
-                              bash "$D/scripts/verify-version.sh" "<+serviceVariables.BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>"
+                              bash "$D/scripts/verify-version.sh" "<+serviceVariables.BG_QADR_STAGE_BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>"
                         executionTarget: {}
                         environmentVariables: []
                         outputVariables: []
@@ -403,7 +413,7 @@ pipeline:
                             script: |-
                               set -e
                               D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>
-                              bash "$D/scripts/<+serviceVariables.SMOKE_SCRIPT>" "<+serviceVariables.BASE_URL>" 3
+                              bash "$D/scripts/<+serviceVariables.SMOKE_SCRIPT>" "<+serviceVariables.BG_QADR_STAGE_BASE_URL>" 3
                     contextType: Pipeline
                   - step:
                       type: EcsBlueGreenSwapTargetGroups
@@ -411,14 +421,40 @@ pipeline:
                       identifier: bg_swap
                       timeout: 15m
                       spec:
+                        delegateSelectors:
+                          - harness-eks-delegate-parson
                         doNotDownOldService: true
+                  - step:
+                      type: ShellScript
+                      name: verify_prod
+                      identifier: verify_prod
+                      timeout: 5m
+                      spec:
+                        shell: Bash
+                        onDelegate: true
+                        delegateSelectors:
+                          - harness-eks-delegate-parson
+                        source:
+                          type: Inline
+                          spec:
+                            script: |-
+                              set -e
+                              D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>-prod
+                              rm -rf "$D" && git clone -q --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git "$D"
+                              bash "$D/scripts/verify-version.sh" "<+serviceVariables.BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>"
+                        executionTarget: {}
+                        environmentVariables: []
+                        outputVariables: []
+                    contextType: Pipeline
                 rollbackSteps:
                   - step:
                       type: EcsBlueGreenRollback
                       name: BG rollback
                       identifier: bg_rollback
                       timeout: 15m
-                      spec: {}
+                      spec:
+                        delegateSelectors:
+                          - harness-eks-delegate-parson
             failureStrategies:
               - onFailure:
                   errors:
@@ -511,6 +547,8 @@ pipeline:
                   identifier: deploy
                   timeout: 15m
                   spec:
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
                     sameAsAlreadyRunningInstances: false
                     forceNewDeployment: false
               - step:
@@ -554,7 +592,9 @@ pipeline:
                   name: Rollback
                   identifier: rollback
                   timeout: 15m
-                  spec: {}
+                  spec:
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
         failureStrategies:
           - onFailure:
               errors:
@@ -661,6 +701,8 @@ pipeline:
                   identifier: bg_create
                   timeout: 15m
                   spec:
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
                     loadBalancer: <+env.variables.alb_name>
                     prodListener: <+serviceVariables.BG_PROD_PROD_LISTENER_ARN>
                     prodListenerRuleArn: <+serviceVariables.BG_PROD_PROD_RULE_ARN>
@@ -668,28 +710,6 @@ pipeline:
                     stageListenerRuleArn: <+serviceVariables.BG_PROD_STAGE_RULE_ARN>
                     sameAsAlreadyRunningInstances: false
                     isTrafficShift: true
-              - step:
-                  type: EcsBlueGreenTrafficShift
-                  name: traffic 10
-                  identifier: shift_10
-                  timeout: 15m
-                  spec:
-                    ecsTrafficShiftWrapper:
-                      type: Inherit
-                      spec:
-                        weightPercentage: 10
-                        downsizeOldService: false
-              - step:
-                  type: EcsBlueGreenTrafficShift
-                  name: traffic 50
-                  identifier: shift_50
-                  timeout: 15m
-                  spec:
-                    ecsTrafficShiftWrapper:
-                      type: Inherit
-                      spec:
-                        weightPercentage: 50
-                        downsizeOldService: false
               - step:
                   type: ShellScript
                   name: verify_version
@@ -707,8 +727,34 @@ pipeline:
                           set -e
                           D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>
                           rm -rf "$D" && git clone -q --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git "$D"
-                          bash "$D/scripts/verify-version.sh" "<+serviceVariables.BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>"
+                          bash "$D/scripts/verify-version.sh" "<+serviceVariables.BG_PROD_STAGE_BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>"
                 contextType: Pipeline
+              - step:
+                  type: EcsBlueGreenTrafficShift
+                  name: traffic 10
+                  identifier: shift_10
+                  timeout: 15m
+                  spec:
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
+                    ecsTrafficShiftWrapper:
+                      type: Inherit
+                      spec:
+                        weightPercentage: 10
+                        downsizeOldService: false
+              - step:
+                  type: EcsBlueGreenTrafficShift
+                  name: traffic 50
+                  identifier: shift_50
+                  timeout: 15m
+                  spec:
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
+                    ecsTrafficShiftWrapper:
+                      type: Inherit
+                      spec:
+                        weightPercentage: 50
+                        downsizeOldService: false
               - step:
                   type: ShellScript
                   name: smoke 10-day
@@ -750,18 +796,41 @@ pipeline:
                   identifier: shift_100
                   timeout: 15m
                   spec:
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
                     ecsTrafficShiftWrapper:
                       type: Inherit
                       spec:
                         weightPercentage: 100
                         downsizeOldService: false
+              - step:
+                  type: ShellScript
+                  name: verify_prod
+                  identifier: verify_prod
+                  timeout: 5m
+                  spec:
+                    shell: Bash
+                    onDelegate: true
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
+                    source:
+                      type: Inline
+                      spec:
+                        script: |-
+                          set -e
+                          D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>-prod
+                          rm -rf "$D" && git clone -q --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git "$D"
+                          bash "$D/scripts/verify-version.sh" "<+serviceVariables.BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>"
+                contextType: Pipeline
             rollbackSteps:
               - step:
                   type: EcsBlueGreenRollback
                   name: BG rollback
                   identifier: bg_rollback
                   timeout: 15m
-                  spec: {}
+                  spec:
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
         failureStrategies:
           - onFailure:
               errors:
