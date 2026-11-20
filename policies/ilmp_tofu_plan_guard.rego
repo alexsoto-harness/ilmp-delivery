@@ -35,7 +35,13 @@ allowed_types := protected | {
 	"aws_ecs_task_definition",
 }
 
+# The policy set is project-wide; only plans of this estate are in scope.
+ilmp_estate {
+	input.variables.name.value == "ilmp-demo"
+}
+
 deny[msg] {
+	ilmp_estate
 	rc := input.resource_changes[_]
 	protected[rc.type]
 	rc.change.actions[_] == "delete"
@@ -43,6 +49,7 @@ deny[msg] {
 }
 
 deny[msg] {
+	ilmp_estate
 	rc := input.resource_changes[_]
 	rc.mode == "managed"
 	not allowed_types[rc.type]

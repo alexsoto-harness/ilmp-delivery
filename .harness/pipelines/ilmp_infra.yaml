@@ -1,0 +1,61 @@
+pipeline:
+  name: ilmp_infra
+  identifier: ilmp_infra
+  projectIdentifier: soto_sandbox
+  orgIdentifier: sandbox
+  description: >-
+    Shared ILMP estate (VPC, Fargate cluster ilmp-demo, ALB ilmp-demo-alb, ECR)
+    changes only here: plan, ilmp_tofu_plan_guard_set, approval, apply.
+  tags:
+    customer: spdji
+    demo: ilmp
+  stages:
+    - stage:
+        name: Estate
+        identifier: estate
+        description: OpenTofu plan, plan guard policy, approval, apply for ilmp_demo_estate
+        type: IACM
+        spec:
+          workspace: ilmp_demo_estate
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: IACMTerraformPlugin
+                  name: init
+                  identifier: init
+                  timeout: 10m
+                  spec:
+                    command: init
+              - step:
+                  type: IACMTerraformPlugin
+                  name: plan
+                  identifier: plan
+                  timeout: 10m
+                  spec:
+                    command: plan
+              - step:
+                  type: IACMApproval
+                  name: approve plan
+                  identifier: approve_plan
+                  timeout: 1h
+                  spec:
+                    autoApprove: false
+              - step:
+                  type: IACMTerraformPlugin
+                  name: apply
+                  identifier: apply
+                  timeout: 30m
+                  spec:
+                    command: apply
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: MarkAsFailure

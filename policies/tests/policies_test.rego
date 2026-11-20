@@ -57,15 +57,15 @@ test_taskdef_refuses_environment_change {
 }
 
 test_plan_guard_refuses_delete {
-	ilmp_tofu_plan_guard.deny["FR-007 never destroy: aws_lb.this [\"delete\", \"create\"]"] with input as {"resource_changes": [{"address": "aws_lb.this", "type": "aws_lb", "mode": "managed", "change": {"actions": ["delete", "create"]}}]}
+	ilmp_tofu_plan_guard.deny["FR-007 never destroy: aws_lb.this [\"delete\", \"create\"]"] with input as {"variables": {"name": {"value": "ilmp-demo"}}, "resource_changes": [{"address": "aws_lb.this", "type": "aws_lb", "mode": "managed", "change": {"actions": ["delete", "create"]}}]}
 }
 
 test_plan_guard_refuses_unlisted_type {
-	count(ilmp_tofu_plan_guard.deny) == 1 with input as {"resource_changes": [{"address": "aws_db_instance.x", "type": "aws_db_instance", "mode": "managed", "change": {"actions": ["create"]}}]}
+	count(ilmp_tofu_plan_guard.deny) == 1 with input as {"variables": {"name": {"value": "ilmp-demo"}}, "resource_changes": [{"address": "aws_db_instance.x", "type": "aws_db_instance", "mode": "managed", "change": {"actions": ["create"]}}]}
 }
 
 test_plan_guard_allows_update {
-	count(ilmp_tofu_plan_guard.deny) == 0 with input as {"resource_changes": [{"address": "aws_lb_target_group.rolling", "type": "aws_lb_target_group", "mode": "managed", "change": {"actions": ["update"]}}]}
+	count(ilmp_tofu_plan_guard.deny) == 0 with input as {"variables": {"name": {"value": "ilmp-demo"}}, "resource_changes": [{"address": "aws_lb_target_group.rolling", "type": "aws_lb_target_group", "mode": "managed", "change": {"actions": ["update"]}}]}
 }
 
 prod_stage(steps, rollback) := {"stage": {
@@ -82,16 +82,16 @@ good_steps := [
 rb := [{"step": {"identifier": "rb", "type": "EcsBlueGreenRollback"}}]
 
 test_prod_policy_allows_complete_stage {
-	count(ilmp_prod_requires_change.deny) == 0 with input as {"pipeline": {"stages": [prod_stage(good_steps, rb)]}}
+	count(ilmp_prod_requires_change.deny) == 0 with input as {"pipeline": {"tags": {"demo": "ilmp"}, "stages": [prod_stage(good_steps, rb)]}}
 }
 
 test_prod_policy_denies_missing_approval {
-	ilmp_prod_requires_change.deny["Prod stage 'Prod' has no approval or change record step"] with input as {"pipeline": {"stages": [prod_stage([good_steps[1], good_steps[2]], rb)]}}
+	ilmp_prod_requires_change.deny["Prod stage 'Prod' has no approval or change record step"] with input as {"pipeline": {"tags": {"demo": "ilmp"}, "stages": [prod_stage([good_steps[1], good_steps[2]], rb)]}}
 }
 
 test_prod_policy_sees_step_groups {
 	grouped := [{"stepGroup": {"identifier": "g", "steps": good_steps}}]
-	count(ilmp_prod_requires_change.deny) == 0 with input as {"pipeline": {"stages": [prod_stage(grouped, rb)]}}
+	count(ilmp_prod_requires_change.deny) == 0 with input as {"pipeline": {"tags": {"demo": "ilmp"}, "stages": [prod_stage(grouped, rb)]}}
 }
 
 test_sbom_denies_pyyaml {
@@ -110,4 +110,12 @@ test_slsa_denies_feature_branch {
 		"buildDefinition": {"externalParameters": {"codeMetadata": {"repositoryURL": "https://github.com/alexsoto-harness/ilmp-calc-engine", "branch": "feature/x"}}},
 		"runDetails": {"builder": {"id": "https://developer.harness.io/docs/continuous-integration"}},
 	}}
+}
+
+test_plan_guard_ignores_other_workspaces {
+	count(ilmp_tofu_plan_guard.deny) == 0 with input as {"variables": {"name": {"value": "other"}}, "resource_changes": [{"address": "aws_db_instance.x", "type": "aws_db_instance", "mode": "managed", "change": {"actions": ["delete"]}}]}
+}
+
+test_prod_policy_ignores_other_pipelines {
+	count(ilmp_prod_requires_change.deny) == 0 with input as {"pipeline": {"tags": {}, "stages": [prod_stage([], [])]}}
 }

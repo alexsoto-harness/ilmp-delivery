@@ -7,12 +7,19 @@ approval_types := {"HarnessApproval", "ServiceNowApproval", "ServiceNowCreate"}
 
 deploy_types := {"EcsBlueGreenCreateService", "EcsCanaryDeploy", "EcsBlueGreenSwapTargetGroups", "EcsBlueGreenTrafficShift"}
 
+# The policy set is project-wide; only ILMP pipelines are in scope.
+ilmp_pipeline {
+	input.pipeline.tags.demo == "ilmp"
+}
+
 prod_stages[stage] {
+	ilmp_pipeline
 	stage := input.pipeline.stages[_].stage
 	is_prod(stage)
 }
 
 prod_stages[stage] {
+	ilmp_pipeline
 	stage := input.pipeline.stages[_].parallel[_].stage
 	is_prod(stage)
 }
