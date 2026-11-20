@@ -9,8 +9,15 @@ variable "name" {
 }
 
 variable "vpc_cidr" {
-  type    = string
-  default = "10.42.0.0/16"
+  description = "Unused when use_default_vpc=true; retained for talk-track parity with a dedicated CIDR."
+  type        = string
+  default     = "10.42.0.0/16"
+}
+
+variable "use_default_vpc" {
+  description = "Reuse the account default VPC to avoid VpcLimitExceeded."
+  type        = bool
+  default     = true
 }
 
 variable "expires" {

@@ -1,4 +1,4 @@
-# ILMP demo estate: one VPC, one Fargate cluster, one ALB.
+# ILMP demo estate: default VPC (quota), one Fargate cluster, one ALB.
 #
 # Shared infrastructure only. Harness CD owns ECS task definitions and
 # services; a routine release never runs tofu apply. Listener rules used by
@@ -9,7 +9,6 @@ locals {
     customer = "spdji"
     demo     = "ilmp"
     Owner    = "alex.soto"
-    Customer = "spdji"
     Purpose  = "demo"
     Expires  = var.expires
   }
@@ -43,47 +42,34 @@ data "aws_availability_zones" "available" {
 }
 
 # ---------------------------------------------------------------- network
+# Account VPC quota is exhausted (VpcLimitExceeded on create). Reuse the
+# default VPC and its default-for-az subnets; still create ILMP-owned SGs,
+# ALB, target groups, cluster, and ECR. No shared ALB/cluster is reused.
 
-resource "aws_vpc" "this" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-  tags                 = { Name = var.name }
+data "aws_vpc" "this" {
+  default = true
 }
 
-resource "aws_internet_gateway" "this" {
-  vpc_id = aws_vpc.this.id
-  tags   = { Name = var.name }
-}
-
-resource "aws_subnet" "public" {
-  count                   = 2
-  vpc_id                  = aws_vpc.this.id
-  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index)
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
-  map_public_ip_on_launch = true
-  tags                    = { Name = "${var.name}-public-${count.index}" }
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.this.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.this.id
+data "aws_subnets" "default_public" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.this.id]
   }
-  tags = { Name = "${var.name}-public" }
+  filter {
+    name   = "default-for-az"
+    values = ["true"]
+  }
 }
 
-resource "aws_route_table_association" "public" {
-  count          = 2
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
+locals {
+  # ALB needs two AZs; default VPC provides one default subnet per AZ.
+  subnet_ids = slice(sort(data.aws_subnets.default_public.ids), 0, 2)
 }
 
 resource "aws_security_group" "alb" {
   name        = "${var.name}-alb"
   description = "ILMP demo ALB listeners"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = data.aws_vpc.this.id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb" {
@@ -107,7 +93,7 @@ resource "aws_vpc_security_group_egress_rule" "alb" {
 resource "aws_security_group" "tasks" {
   name        = "${var.name}-tasks"
   description = "ILMP demo Fargate tasks"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = data.aws_vpc.this.id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "tasks_from_alb" {
@@ -190,7 +176,7 @@ resource "aws_lb" "this" {
   name               = "${var.name}-alb"
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = aws_subnet.public[*].id
+  subnets            = local.subnet_ids
 }
 
 resource "aws_lb_target_group" "rolling" {
@@ -199,7 +185,7 @@ resource "aws_lb_target_group" "rolling" {
   port                 = 8080
   protocol             = "HTTP"
   target_type          = "ip"
-  vpc_id               = aws_vpc.this.id
+  vpc_id               = data.aws_vpc.this.id
   deregistration_delay = 15
   health_check {
     path                = each.value.health
@@ -227,7 +213,7 @@ resource "aws_lb_target_group" "bluegreen" {
   port                 = 8080
   protocol             = "HTTP"
   target_type          = "ip"
-  vpc_id               = aws_vpc.this.id
+  vpc_id               = data.aws_vpc.this.id
   deregistration_delay = 15
   health_check {
     path                = "/health"

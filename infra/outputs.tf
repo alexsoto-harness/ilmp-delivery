@@ -13,8 +13,12 @@ output "alb_arn" {
   value = aws_lb.this.arn
 }
 
+output "vpc_id" {
+  value = data.aws_vpc.this.id
+}
+
 output "subnet_ids" {
-  value = aws_subnet.public[*].id
+  value = local.subnet_ids
 }
 
 output "task_security_group_id" {
