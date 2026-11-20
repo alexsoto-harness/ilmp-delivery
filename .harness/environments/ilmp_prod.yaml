@@ -1,0 +1,53 @@
+environment:
+  name: ILMP Prod
+  identifier: ilmp_prod
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox
+  type: Production
+  description: ILMP prod environment. Variables filled from ilmp_demo_estate tofu outputs after apply.
+  tags:
+    customer: spdji
+    demo: ilmp
+  variables:
+    - name: ilmp_env_short
+      type: String
+      value: prod
+    - name: ilmp_task_sg
+      type: String
+      value: PENDING
+    - name: ilmp_subnet_a
+      type: String
+      value: PENDING
+    - name: ilmp_subnet_b
+      type: String
+      value: PENDING
+    - name: calc_tg_arn
+      type: String
+      value: PENDING
+    - name: svc_tg_arn
+      type: String
+      value: PENDING
+    - name: alb_dns
+      type: String
+      value: PENDING
+    - name: alb_arn
+      type: String
+      value: PENDING
+    - name: base_url_calc
+      type: String
+      value: PENDING
+    - name: base_url_svc
+      type: String
+      value: PENDING
+    - name: bg_prod_listener_arn
+      type: String
+      value: PENDING
+    - name: bg_prod_rule_arn
+      type: String
+      value: PENDING
+    - name: bg_stage_listener_arn
+      type: String
+      value: PENDING
+    - name: bg_stage_rule_arn
+      type: String
+      value: PENDING
