@@ -140,7 +140,7 @@ pipeline:
                         git reset -q --hard origin/main
                       done
                       [ "$pushed" = yes ] || { echo "could not push the release manifest"; exit 1; }
-                      echo "RELEASE_COMPLETE=$(sed -n 's/^RELEASE_COMPLETE=//p' /tmp/record.out | tail -1)" >> $HARNESS_OUTPUTS_PATH
+                      export RELEASE_COMPLETE="$(sed -n 's/^RELEASE_COMPLETE=//p' /tmp/record.out | tail -1)"
                     outputVariables:
                       - name: RELEASE_COMPLETE
                         type: String
