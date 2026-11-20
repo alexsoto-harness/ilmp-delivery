@@ -1,0 +1,25 @@
+rules:
+  - id: ilmp-a1-calc-writes-outside-schema
+    metadata:
+      criterion: A1
+      dimension: architecture
+    message: "A1: the calc engine writes outside its own schema (calc_*)"
+    severity: ERROR
+    languages: [python]
+    patterns:
+      - pattern-either:
+          - pattern: $CONN.execute("$SQL", ...)
+          - pattern: $CONN.execute("$SQL")
+      - metavariable-regex:
+          metavariable: $SQL
+          regex: (?i)^\s*(insert\s+into|update|delete\s+from|create\s+table(\s+if\s+not\s+exists)?)\s+(?!calc_)[a-z_]+\.
+  - id: ilmp-s3-unsafe-yaml-load
+    metadata:
+      criterion: S3
+      dimension: security
+    message: "S3: yaml.load with a non-safe loader allows arbitrary object construction"
+    severity: ERROR
+    languages: [python]
+    patterns:
+      - pattern: yaml.load(...)
+      - pattern-not: yaml.load(..., Loader=yaml.SafeLoader)

@@ -1,0 +1,20 @@
+{
+  "verdict": "FAIL",
+  "score": 72,
+  "dimensions": [
+    {"id": "security", "score": 100, "status": "PASS", "findings": []},
+    {"id": "correctness", "score": 100, "status": "PASS", "findings": []},
+    {"id": "architecture", "score": 0, "status": "FAIL", "findings": [
+      {"criterion": "A1", "severity": "high", "evidence": "app/jobs.py: INSERT INTO pricing.ref_rates (calc engine writes outside its schema)", "source": "semgrep+agent", "verification": "pre-confirmed"},
+      {"criterion": "A2", "severity": "high", "evidence": "calc engine publishes to pricing directly instead of via the service layer", "source": "agent", "verification": "confirmed"}
+    ]},
+    {"id": "dictionary", "score": 85, "status": "PASS", "findings": [
+      {"criterion": "D1", "severity": "medium", "evidence": "pricing.ref_rates.at not in dictionary.yaml", "source": "agent", "verification": "confirmed"}
+    ]},
+    {"id": "unit_tests", "score": 85, "status": "PASS", "findings": [
+      {"criterion": "U3", "severity": "medium", "evidence": "_publish_reference_rate has no test", "source": "agent", "verification": "confirmed"}
+    ]}
+  ],
+  "refuted_count": 1,
+  "report_url": ""
+}

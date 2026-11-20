@@ -1,0 +1,20 @@
+{
+  "verdict": "PASS",
+  "score": 91,
+  "dimensions": [
+    {"id": "security", "score": 100, "status": "PASS", "findings": []},
+    {"id": "correctness", "score": 85, "status": "PASS", "findings": [
+      {"criterion": "C3", "severity": "medium", "evidence": "app/main.py: 409 path for non-COMPLETED jobs not in FR-101", "source": "agent", "verification": "confirmed"}
+    ]},
+    {"id": "architecture", "score": 100, "status": "PASS", "findings": []},
+    {"id": "dictionary", "score": 85, "status": "PASS", "findings": [
+      {"criterion": "D3", "severity": "medium", "evidence": "period_return_pct not yet in dictionary.yaml", "source": "agent", "verification": "confirmed"}
+    ]},
+    {"id": "unit_tests", "score": 70, "status": "PASS", "findings": [
+      {"criterion": "U2", "severity": "medium", "evidence": "tests/test_main.py: analytics test recomputes the formula", "source": "agent", "verification": "inconclusive"},
+      {"criterion": "U3", "severity": "medium", "evidence": "FR-102 404 path has no test", "source": "agent", "verification": "confirmed"}
+    ]}
+  ],
+  "refuted_count": 2,
+  "report_url": ""
+}

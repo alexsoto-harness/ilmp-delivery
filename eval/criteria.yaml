@@ -1,0 +1,37 @@
+# Demo subset of the SPDJI Eval framework: 5 of 10 dimensions, 15 of 93 criteria.
+# Wording follows their Lighthouse slides. Weights sum to 1.0.
+eval_version: ilmp-eval/0.1
+pass_score: 80
+gating_dimensions: [security, architecture]
+severity_penalty: {critical: 60, high: 40, medium: 15, low: 5}
+dimensions:
+  - id: security
+    weight: 0.30
+    criteria:
+      S1: No critical or high CVEs in dependencies or the image (OSV, Trivy)
+      S2: No secrets in the change (Gitleaks)
+      S3: No injection or unsafe deserialization patterns (Semgrep)
+  - id: correctness
+    weight: 0.20
+    criteria:
+      C1: Every changed FR-xxx in specs/ is implemented
+      C2: Backtest status transitions match FR-101
+      C3: Error paths return the documented status codes
+  - id: architecture
+    weight: 0.25
+    criteria:
+      A1: The calc engine writes only within its own schema (calc_*)
+      A2: Layer boundaries hold (UI to service layer to calc engine)
+      A3: Directory structure matches the component spec
+  - id: dictionary
+    weight: 0.10
+    criteria:
+      D1: API and DB fields exist in dictionary.yaml
+      D2: Names and units are consistent with dictionary.yaml
+      D3: New fields are documented before use
+  - id: unit_tests
+    weight: 0.15
+    criteria:
+      U1: Coverage of changed lines is at least 80%
+      U2: Tests assert behavior, not just execution
+      U3: Each changed FR has a test
