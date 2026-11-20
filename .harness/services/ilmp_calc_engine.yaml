@@ -1,0 +1,58 @@
+service:
+  name: ilmp_calc_engine
+  identifier: ilmp_calc_engine
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox
+  description: SPDJI ILMP calc engine (Python FastAPI) on ECS Fargate. Artifact from ECR (same digest as HAR).
+  tags:
+    customer: spdji
+    demo: ilmp
+  serviceDefinition:
+    type: ECS
+    spec:
+      artifacts:
+        primary:
+          primaryArtifactRef: ecr_calc
+          sources:
+            - identifier: ecr_calc
+              type: Ecr
+              spec:
+                connectorRef: account.aws_oidc_iacm
+                region: us-east-1
+                imagePath: ilmp/calc-engine
+                tag: <+input>
+                digest: <+input>
+      manifests:
+        - manifest:
+            identifier: taskdef
+            type: EcsTaskDefinition
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: ghalexsotoharnessfinegrained
+                  repoName: ilmp-calc-engine
+                  gitFetchType: Branch
+                  branch: main
+                  paths:
+                    - deploy/ecs/task-definition.yaml
+        - manifest:
+            identifier: svcdef
+            type: EcsServiceDefinition
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: ghalexsotoharnessfinegrained
+                  repoName: ilmp-calc-engine
+                  gitFetchType: Branch
+                  branch: main
+                  paths:
+                    - deploy/ecs/service-definition.yaml
+      variables:
+        - name: COMPONENT
+          type: String
+          value: calc-engine
+        - name: VERSION_PATH
+          type: String
+          value: /version

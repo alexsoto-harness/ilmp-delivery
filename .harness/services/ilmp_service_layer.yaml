@@ -1,0 +1,58 @@
+service:
+  name: ilmp_service_layer
+  identifier: ilmp_service_layer
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox
+  description: SPDJI ILMP service layer (Spring Boot) on ECS Fargate. Dev/QA only in the demo.
+  tags:
+    customer: spdji
+    demo: ilmp
+  serviceDefinition:
+    type: ECS
+    spec:
+      artifacts:
+        primary:
+          primaryArtifactRef: ecr_svc
+          sources:
+            - identifier: ecr_svc
+              type: Ecr
+              spec:
+                connectorRef: account.aws_oidc_iacm
+                region: us-east-1
+                imagePath: ilmp/service-layer
+                tag: <+input>
+                digest: <+input>
+      manifests:
+        - manifest:
+            identifier: taskdef
+            type: EcsTaskDefinition
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: ghalexsotoharnessfinegrained
+                  repoName: ilmp-service-layer
+                  gitFetchType: Branch
+                  branch: main
+                  paths:
+                    - deploy/ecs/task-definition.yaml
+        - manifest:
+            identifier: svcdef
+            type: EcsServiceDefinition
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: ghalexsotoharnessfinegrained
+                  repoName: ilmp-service-layer
+                  gitFetchType: Branch
+                  branch: main
+                  paths:
+                    - deploy/ecs/service-definition.yaml
+      variables:
+        - name: COMPONENT
+          type: String
+          value: service-layer
+        - name: VERSION_PATH
+          type: String
+          value: /api/version

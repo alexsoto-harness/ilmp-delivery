@@ -1,0 +1,21 @@
+inputSet:
+  name: ilmp_critical_vuln_fastpath
+  identifier: ilmp_critical_vuln_fastpath
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox
+  tags:
+    customer: spdji
+    demo: ilmp
+  pipeline:
+    identifier: ilmp_release_calc_engine
+    variables:
+      - name: change_type
+        type: String
+        value: emergency
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: hotfix/bad-backtest
