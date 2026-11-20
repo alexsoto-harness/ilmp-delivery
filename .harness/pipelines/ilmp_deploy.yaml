@@ -3,7 +3,7 @@ pipeline:
   identifier: ilmp_deploy
   projectIdentifier: soto_sandbox
   orgIdentifier: sandbox
-  description: Promote one release (calc-engine and service-layer together) through Dev, QA, QADR, UAT and Prod. Digests come from releases/<release>.yaml, written by ILMP Build.
+  description: Promote one release through Dev and QA (calc-engine and service-layer), then QADR, UAT and Prod (calc-engine only). Digests come from releases/<release>.yaml, written by ILMP Build.
   tags:
     customer: spdji
     demo: ilmp
@@ -39,7 +39,7 @@ pipeline:
                           set -e
                           rm -rf /tmp/ilmp-d && git clone -q --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git /tmp/ilmp-d
                           REL='<+pipeline.variables.release>'
-                          eval "$(bash /tmp/ilmp-d/scripts/resolve-release.sh \"$REL\" /tmp/ilmp-d/releases)"
+                          eval "$(bash /tmp/ilmp-d/scripts/resolve-release.sh "$REL" /tmp/ilmp-d/releases)"
                           echo "calc-engine   $CALC_TAG $CALC_DIGEST build $CALC_BUILD"
                           echo "service-layer $SVC_TAG $SVC_DIGEST build $SVC_BUILD"
                     outputVariables:
@@ -324,24 +324,6 @@ pipeline:
                             - name: EXPECTED_DIGEST
                               type: String
                               value: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.CALC_DIGEST>
-                  - serviceRef: ilmp_service_layer
-                    serviceInputs:
-                      serviceDefinition:
-                        type: ECS
-                        spec:
-                          artifacts:
-                            primary:
-                              primaryArtifactRef: ecr_svc
-                              sources:
-                                - identifier: ecr_svc
-                                  type: Ecr
-                                  spec:
-                                    tag: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_TAG>
-                                    digest: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_DIGEST>
-                          variables:
-                            - name: EXPECTED_DIGEST
-                              type: String
-                              value: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_DIGEST>
                 metadata:
                   parallel: true
               environment:
@@ -357,7 +339,7 @@ pipeline:
                       identifier: bg_create
                       timeout: 15m
                       spec:
-                        loadBalancer: <+env.variables.alb_arn>
+                        loadBalancer: <+env.variables.alb_name>
                         prodListener: <+serviceVariables.BG_QADR_PROD_LISTENER_ARN>
                         prodListenerRuleArn: <+serviceVariables.BG_QADR_PROD_RULE_ARN>
                         stageListener: <+serviceVariables.BG_QADR_STAGE_LISTENER_ARN>
@@ -436,7 +418,6 @@ pipeline:
                     approvalMessage: |-
                       Approve release <+pipeline.variables.release> for UAT.
                       calc-engine <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.CALC_TAG>
-                      service-layer <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_TAG>
                     includePipelineExecutionHistory: true
                     approvers:
                       userGroups: [account._account_all_users]
@@ -469,24 +450,6 @@ pipeline:
                         - name: EXPECTED_DIGEST
                           type: String
                           value: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.CALC_DIGEST>
-              - serviceRef: ilmp_service_layer
-                serviceInputs:
-                  serviceDefinition:
-                    type: ECS
-                    spec:
-                      artifacts:
-                        primary:
-                          primaryArtifactRef: ecr_svc
-                          sources:
-                            - identifier: ecr_svc
-                              type: Ecr
-                              spec:
-                                tag: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_TAG>
-                                digest: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_DIGEST>
-                      variables:
-                        - name: EXPECTED_DIGEST
-                          type: String
-                          value: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_DIGEST>
             metadata:
               parallel: true
           environment:
@@ -567,7 +530,6 @@ pipeline:
                     approvalMessage: |-
                       Approve release <+pipeline.variables.release> for Prod (ServiceNow deferred).
                       calc-engine <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.CALC_TAG>
-                      service-layer <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_TAG>
                     includePipelineExecutionHistory: true
                     approvers:
                       userGroups: [account._account_all_users]
@@ -600,24 +562,6 @@ pipeline:
                         - name: EXPECTED_DIGEST
                           type: String
                           value: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.CALC_DIGEST>
-              - serviceRef: ilmp_service_layer
-                serviceInputs:
-                  serviceDefinition:
-                    type: ECS
-                    spec:
-                      artifacts:
-                        primary:
-                          primaryArtifactRef: ecr_svc
-                          sources:
-                            - identifier: ecr_svc
-                              type: Ecr
-                              spec:
-                                tag: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_TAG>
-                                digest: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_DIGEST>
-                      variables:
-                        - name: EXPECTED_DIGEST
-                          type: String
-                          value: <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_DIGEST>
             metadata:
               parallel: true
           environment:
@@ -649,7 +593,7 @@ pipeline:
                   identifier: bg_create
                   timeout: 15m
                   spec:
-                    loadBalancer: <+env.variables.alb_arn>
+                    loadBalancer: <+env.variables.alb_name>
                     prodListener: <+serviceVariables.BG_PROD_PROD_LISTENER_ARN>
                     prodListenerRuleArn: <+serviceVariables.BG_PROD_PROD_RULE_ARN>
                     stageListener: <+serviceVariables.BG_PROD_STAGE_LISTENER_ARN>

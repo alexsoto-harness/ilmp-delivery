@@ -33,6 +33,9 @@ environment:
     - name: alb_arn
       type: String
       value: arn:aws:elasticloadbalancing:us-east-1:759984737373:loadbalancer/app/ilmp-demo-alb/f3c915c2d376d66b
+    - name: alb_name
+      type: String
+      value: ilmp-demo-alb
     - name: base_url_svc
       type: String
       value: PENDING
