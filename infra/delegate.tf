@@ -93,7 +93,7 @@ resource "aws_ecs_service" "delegate" {
   desired_count   = 1
   launch_type     = "FARGATE"
   network_configuration {
-    subnets          = aws_subnet.public[*].id
+    subnets          = local.subnet_ids
     security_groups  = [aws_security_group.tasks.id]
     assign_public_ip = true
   }
