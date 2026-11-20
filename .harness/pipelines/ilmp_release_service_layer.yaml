@@ -1,0 +1,211 @@
+pipeline:
+  name: ILMP Release service-layer
+  identifier: ilmp_release_service_layer
+  projectIdentifier: soto_sandbox
+  orgIdentifier: sandbox
+  description: Build once and promote service-layer Dev→QA only (demo scope).
+  tags:
+    customer: spdji
+    demo: ilmp
+  properties:
+    ci:
+      codebase:
+        connectorRef: ghalexsotoharnessfinegrained
+        repoName: ilmp-service-layer
+        build: <+input>
+  variables:
+    - name: component
+      type: String
+      value: service-layer
+    - name: change_type
+      type: String
+      value: <+input>.default(standard).allowedValues(standard,emergency)
+    - name: IMAGE_TAG
+      type: String
+      value: ""
+    - name: IMAGE_DIGEST
+      type: String
+      value: ""
+  stages:
+    - stage:
+        name: Build
+        identifier: build
+        template:
+          templateRef: ilmp_build_scan_push
+          versionLabel: v1
+    - stage:
+        name: Release Gate
+        identifier: release_gate
+        type: CI
+        spec:
+          cloneCodebase: false
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - stepGroup:
+                  name: gate
+                  identifier: gate
+                  template:
+                    templateRef: ilmp_release_gate
+                    versionLabel: v1
+        failureStrategies:
+          - onFailure:
+              errors: [AllErrors]
+              action:
+                type: MarkAsFailure
+    - stage:
+        name: Dev
+        identifier: dev
+        type: Deployment
+        spec:
+          deploymentType: ECS
+          service:
+            serviceRef: ilmp_service_layer
+            serviceInputs:
+              serviceDefinition:
+                type: ECS
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: ecr_svc
+                      sources:
+                        - identifier: ecr_svc
+                          type: Ecr
+                          spec:
+                            tag: <+pipeline.variables.IMAGE_TAG>
+                            digest: <+pipeline.variables.IMAGE_DIGEST>
+          environment:
+            environmentRef: ilmp_dev
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: ilmp_dev_ecs
+          execution:
+            steps:
+              - step:
+                  type: EcsRollingDeploy
+                  name: Deploy
+                  identifier: deploy
+                  timeout: 15m
+                  spec:
+                    sameAsAlreadyRunningInstances: false
+                    forceNewDeployment: false
+              - step:
+                  type: ShellScript
+                  name: verify_version
+                  identifier: verify_version
+                  timeout: 5m
+                  spec:
+                    shell: Bash
+                    onDelegate: true
+                    source:
+                      type: Inline
+                      spec:
+                        script: |-
+                          set -e
+                          git clone --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git /tmp/ilmp-delivery
+                          /tmp/ilmp-delivery/scripts/verify-version.sh \
+                            "<+env.variables.base_url_svc>/api/version" \
+                            "<+pipeline.variables.IMAGE_DIGEST>"
+            rollbackSteps:
+              - step:
+                  type: EcsRollingRollback
+                  name: Rollback
+                  identifier: rollback
+                  timeout: 15m
+                  spec: {}
+        failureStrategies:
+          - onFailure:
+              errors: [AllErrors]
+              action:
+                type: StageRollback
+    - stage:
+        name: QA Approval
+        identifier: qa_approval
+        type: Approval
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: HarnessApproval
+                  name: Product owner sign-off
+                  identifier: qa_signoff
+                  timeout: 1d
+                  spec:
+                    approvalMessage: Approve service-layer for QA
+                    includePipelineExecutionHistory: true
+                    approvers:
+                      userGroups:
+                        - account._account_all_users
+                      minimumCount: 1
+                      disallowPipelineExecutor: false
+                    isAutoRejectEnabled: false
+    - stage:
+        name: QA
+        identifier: qa
+        type: Deployment
+        spec:
+          deploymentType: ECS
+          service:
+            serviceRef: ilmp_service_layer
+            serviceInputs:
+              serviceDefinition:
+                type: ECS
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: ecr_svc
+                      sources:
+                        - identifier: ecr_svc
+                          type: Ecr
+                          spec:
+                            tag: <+pipeline.variables.IMAGE_TAG>
+                            digest: <+pipeline.variables.IMAGE_DIGEST>
+          environment:
+            environmentRef: ilmp_qa
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: ilmp_qa_ecs
+          execution:
+            steps:
+              - step:
+                  type: EcsRollingDeploy
+                  name: Deploy
+                  identifier: deploy
+                  timeout: 15m
+                  spec:
+                    sameAsAlreadyRunningInstances: false
+                    forceNewDeployment: false
+              - step:
+                  type: ShellScript
+                  name: verify_version
+                  identifier: verify_version
+                  timeout: 5m
+                  spec:
+                    shell: Bash
+                    onDelegate: true
+                    source:
+                      type: Inline
+                      spec:
+                        script: |-
+                          set -e
+                          git clone --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git /tmp/ilmp-delivery
+                          /tmp/ilmp-delivery/scripts/verify-version.sh \
+                            "<+env.variables.base_url_svc>/api/version" \
+                            "<+pipeline.variables.IMAGE_DIGEST>"
+            rollbackSteps:
+              - step:
+                  type: EcsRollingRollback
+                  name: Rollback
+                  identifier: rollback
+                  timeout: 15m
+                  spec: {}
+        failureStrategies:
+          - onFailure:
+              errors: [AllErrors]
+              action:
+                type: StageRollback
