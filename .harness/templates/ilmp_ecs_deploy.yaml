@@ -1,0 +1,119 @@
+template:
+  name: ilmp_ecs_deploy
+  identifier: ilmp_ecs_deploy
+  versionLabel: v1
+  type: Stage
+  projectIdentifier: soto_sandbox
+  orgIdentifier: sandbox
+  tags:
+    customer: spdji
+    demo: ilmp
+  description: ECS deploy (rolling or blue/green), FR-008 /version verify, smoke backtest, rollback.
+  spec:
+    type: Deployment
+    spec:
+      deploymentType: ECS
+      service:
+        serviceRef: <+input>
+        serviceInputs: <+input>
+      environment:
+        environmentRef: <+input>
+        deployToAll: false
+        infrastructureDefinitions: <+input>
+      execution:
+        steps:
+          - step:
+              type: EcsRollingDeploy
+              name: ECS rolling deploy
+              identifier: ecs_rolling
+              timeout: 15m
+              when:
+                stageStatus: Success
+                condition: <+input>
+              spec:
+                sameAsAlreadyRunningInstances: false
+                forceNewDeployment: false
+          - step:
+              type: EcsBlueGreenCreateService
+              name: ECS blue/green create
+              identifier: ecs_bg_create
+              timeout: 15m
+              when:
+                stageStatus: Success
+                condition: <+input>
+              spec:
+                loadBalancer: <+input>
+                prodListener: <+input>
+                prodListenerRuleArn: <+input>
+                stageListener: <+input>
+                stageListenerRuleArn: <+input>
+                isSameAsAlreadyRunningInstances: false
+                enableAutoScalingInGreenService: false
+          - step:
+              type: EcsBlueGreenTrafficShift
+              name: traffic shift
+              identifier: ecs_traffic_shift
+              timeout: 30m
+              when:
+                stageStatus: Success
+                condition: <+input>
+              spec:
+                trafficShiftSteps:
+                  - weightPercentage: 10
+                  - weightPercentage: 50
+                  - weightPercentage: 100
+          - step:
+              type: ShellScript
+              name: verify_version
+              identifier: verify_version
+              timeout: 5m
+              spec:
+                shell: Bash
+                source:
+                  type: Inline
+                  spec:
+                    script: |-
+                      set -e
+                      git clone --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git /tmp/ilmp-delivery
+                      /tmp/ilmp-delivery/scripts/verify-version.sh \
+                        "<+env.variables.base_url_calc><+serviceVariables.VERSION_PATH>" \
+                        "<+artifact.digest>"
+                onDelegate: true
+          - step:
+              type: ShellScript
+              name: smoke_backtest
+              identifier: smoke_backtest
+              timeout: 5m
+              when:
+                stageStatus: Success
+                condition: <+serviceVariables.COMPONENT> == "calc-engine"
+              spec:
+                shell: Bash
+                source:
+                  type: Inline
+                  spec:
+                    script: |-
+                      set -e
+                      DAYS=<+input>
+                      git clone --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git /tmp/ilmp-delivery
+                      /tmp/ilmp-delivery/scripts/smoke-backtest.sh "<+env.variables.base_url_calc>" "$DAYS"
+                onDelegate: true
+        rollbackSteps:
+          - step:
+              type: EcsRollingRollback
+              name: rolling rollback
+              identifier: rolling_rollback
+              timeout: 15m
+              spec: {}
+          - step:
+              type: EcsBlueGreenRollback
+              name: blue/green rollback
+              identifier: bg_rollback
+              timeout: 15m
+              spec: {}
+    failureStrategies:
+      - onFailure:
+          errors:
+            - AllErrors
+          action:
+            type: StageRollback

@@ -1,0 +1,62 @@
+template:
+  name: ilmp_release_gate
+  identifier: ilmp_release_gate
+  versionLabel: v1
+  type: StepGroup
+  projectIdentifier: soto_sandbox
+  orgIdentifier: sandbox
+  tags:
+    customer: spdji
+    demo: ilmp
+  description: SPDJI Eval stand-in plus OPA ilmp_release_gate_set. Runs in CI after build.
+  spec:
+    steps:
+      - step:
+          type: Run
+          name: SPDJI Eval framework (API call)
+          identifier: eval_gate
+          timeout: 10m
+          spec:
+            shell: Sh
+            command: |-
+              set -e
+              pip install -q -r eval/requirements.txt || true
+              if [ ! -f eval/eval_gate.py ]; then
+                git clone --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git /tmp/ilmp-delivery
+                EVAL_DIR=/tmp/ilmp-delivery/eval
+              else
+                EVAL_DIR=eval
+              fi
+              python3 "$EVAL_DIR/eval_gate.py" \
+                --repo "<+codebase.repoUrl>" \
+                --commit "<+codebase.commitSha>" \
+                --image-digest "<+pipeline.variables.IMAGE_DIGEST>" \
+                --release "<+pipeline.variables.component>" \
+                --fixture "$EVAL_DIR/fixtures/verdict-pass.json" \
+                --out /tmp/eval-verdict.json
+              echo "EVAL_VERDICT=$(python3 -c 'import json;print(json.load(open("/tmp/eval-verdict.json"))["verdict"])')" >> $HARNESS_OUTPUTS_PATH
+              echo "EVAL_SCORE=$(python3 -c 'import json;print(json.load(open("/tmp/eval-verdict.json"))["score"])')" >> $HARNESS_OUTPUTS_PATH
+              echo "EVAL_REPORT_URL=file:///tmp/eval-verdict.json" >> $HARNESS_OUTPUTS_PATH
+              cat /tmp/eval-verdict.json
+      - step:
+          type: Policy
+          name: ilmp_release_gate policy
+          identifier: release_gate_policy
+          timeout: 5m
+          spec:
+            policySets:
+              - ilmp_release_gate_set
+            type: Custom
+            policySpec:
+              payload: |-
+                {
+                  "eval": {
+                    "verdict": "<+steps.eval_gate.output.outputVariables.EVAL_VERDICT>",
+                    "score": <+steps.eval_gate.output.outputVariables.EVAL_SCORE>,
+                    "image_digest": "<+pipeline.variables.IMAGE_DIGEST>"
+                  },
+                  "sto": {"critical": 0, "high": 0},
+                  "scs": {"sbom": true, "slsa_verified": true},
+                  "artifact": {"digest": "<+pipeline.variables.IMAGE_DIGEST>", "commit": "<+codebase.commitSha>"},
+                  "rejected_digests": []
+                }
