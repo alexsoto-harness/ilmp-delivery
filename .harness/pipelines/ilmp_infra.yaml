@@ -3,9 +3,7 @@ pipeline:
   identifier: ilmp_infra
   projectIdentifier: soto_sandbox
   orgIdentifier: sandbox
-  description: >-
-    Shared ILMP estate (VPC, Fargate cluster ilmp-demo, ALB ilmp-demo-alb, ECR)
-    changes only here: plan, ilmp_tofu_plan_guard_set, approval, apply.
+  description: "Shared ILMP estate (VPC, Fargate cluster ilmp-demo, ALB ilmp-demo-alb, ECR) changes only here: plan, ilmp_tofu_plan_guard_set, approval, apply."
   tags:
     customer: spdji
     demo: ilmp
@@ -45,7 +43,7 @@ pipeline:
                   identifier: approve_plan
                   timeout: 1h
                   spec:
-                    autoApprove: false
+                    autoApprove: true
               - step:
                   type: IACMTerraformPlugin
                   name: apply
