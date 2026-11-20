@@ -26,7 +26,7 @@ environment:
       value: arn:aws:elasticloadbalancing:us-east-1:759984737373:targetgroup/ilmp-calc-prod-blue/a1991c5adbfa91ab
     - name: svc_tg_arn
       type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:targetgroup/ilmp-svc-prod-blue/5f134f3a7dcd5a6c
     - name: alb_dns
       type: String
       value: ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com
@@ -38,7 +38,7 @@ environment:
       value: ilmp-demo-alb
     - name: base_url_svc
       type: String
-      value: PENDING
+      value: http://ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com:8095
     - name: bg_prod_listener_arn
       type: String
       value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener/app/ilmp-demo-alb/f3c915c2d376d66b/b9d54234f6e0be8e
