@@ -2,13 +2,13 @@ release: "2026.12"
 components:
   calc-engine:
     image: "759984737373.dkr.ecr.us-east-1.amazonaws.com/ilmp/calc-engine"
-    tag: "2026.12-ec1f7d3-10"
-    digest: "sha256:4b854bdd38d5443700dcf7ff28e7e6cbc6a1eb3060420d6daa653c259c64d7d1"
+    tag: "2026.12-ec1f7d3-13"
+    digest: "sha256:7c62e6ab8740bee1bc5e8dce36bd791a5d73216a0b34fc22beab2444148a9935"
     commit: "ec1f7d31bdb9c94a077fae1ad48e9827cb58b228"
-    build_url: "https://app.harness.io/ng/#/account/EeRjnXTnS4GrLG5VNNJZUw/ci/orgs/sandbox/projects/soto_sandbox/pipelines/ilmp_build/executions/32djgujFTTqfWgVlgrhVAw/pipeline"
+    build_url: "https://app.harness.io/ng/#/account/EeRjnXTnS4GrLG5VNNJZUw/ci/orgs/sandbox/projects/soto_sandbox/pipelines/ilmp_build/executions/4ZhsGvNFRjWmFkR9Fv1XvA/pipeline"
     eval_verdict: "PASS"
     eval_score: "100"
-    recorded_at: "2026-11-20T03:56:30Z"
+    recorded_at: "2026-11-20T04:11:19Z"
   service-layer:
     image: "759984737373.dkr.ecr.us-east-1.amazonaws.com/ilmp/service-layer"
     tag: "2026.12-cc88a77-12"
