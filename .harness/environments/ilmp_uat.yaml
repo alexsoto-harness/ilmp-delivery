@@ -4,7 +4,7 @@ environment:
   orgIdentifier: sandbox
   projectIdentifier: soto_sandbox
   type: PreProduction
-  description: ILMP uat environment. Variables filled from ilmp_demo_estate tofu outputs after apply.
+  description: ILMP uat environment. Variables from ilmp_demo_estate tofu outputs.
   tags:
     customer: spdji
     demo: ilmp
@@ -14,28 +14,28 @@ environment:
       value: uat
     - name: ilmp_task_sg
       type: String
-      value: PENDING
+      value: sg-09a3a15b3d842638f
     - name: ilmp_subnet_a
       type: String
-      value: PENDING
+      value: subnet-35b30f7f
     - name: ilmp_subnet_b
       type: String
-      value: PENDING
+      value: subnet-5b826a07
     - name: calc_tg_arn
       type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:targetgroup/ilmp-calc-uat/2a8d5d01663fc8da
     - name: svc_tg_arn
       type: String
       value: PENDING
     - name: alb_dns
       type: String
-      value: PENDING
+      value: ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com
     - name: alb_arn
+      type: String
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:loadbalancer/app/ilmp-demo-alb/f3c915c2d376d66b
+    - name: base_url_svc
       type: String
       value: PENDING
     - name: base_url_calc
       type: String
-      value: PENDING
-    - name: base_url_svc
-      type: String
-      value: PENDING
+      value: http://ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com:8084

@@ -4,7 +4,7 @@ environment:
   orgIdentifier: sandbox
   projectIdentifier: soto_sandbox
   type: PreProduction
-  description: ILMP qa environment. Variables filled from ilmp_demo_estate tofu outputs after apply.
+  description: ILMP qa environment. Variables from ilmp_demo_estate tofu outputs.
   tags:
     customer: spdji
     demo: ilmp
@@ -14,28 +14,28 @@ environment:
       value: qa
     - name: ilmp_task_sg
       type: String
-      value: PENDING
+      value: sg-09a3a15b3d842638f
     - name: ilmp_subnet_a
       type: String
-      value: PENDING
+      value: subnet-35b30f7f
     - name: ilmp_subnet_b
       type: String
-      value: PENDING
+      value: subnet-5b826a07
     - name: calc_tg_arn
       type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:targetgroup/ilmp-calc-qa/4043efbb3dfd1159
     - name: svc_tg_arn
       type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:targetgroup/ilmp-svc-qa/4b4aaeb13e007bd4
     - name: alb_dns
       type: String
-      value: PENDING
+      value: ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com
     - name: alb_arn
       type: String
-      value: PENDING
-    - name: base_url_calc
-      type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:loadbalancer/app/ilmp-demo-alb/f3c915c2d376d66b
     - name: base_url_svc
       type: String
-      value: PENDING
+      value: http://ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com:8092
+    - name: base_url_calc
+      type: String
+      value: http://ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com:8082
