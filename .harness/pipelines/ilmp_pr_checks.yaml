@@ -10,7 +10,7 @@ pipeline:
   properties:
     ci:
       codebase:
-        connectorRef: ghalexsotoharnessfinegrained
+        connectorRef: alexsotoharness
         repoName: <+input>
         build: <+input>
   variables:
