@@ -14,7 +14,7 @@ template:
     steps:
       - step:
           type: Run
-          name: SPDJI Eval framework (API call)
+          name: SPDJI Eval framework - API call
           identifier: eval_gate
           timeout: 10m
           spec:
