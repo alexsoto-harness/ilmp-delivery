@@ -1,0 +1,14 @@
+inputSet:
+  name: deploy 2026.12 emergency
+  identifier: deploy_2026_12_emergency
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox
+  pipeline:
+    identifier: ilmp_deploy
+    variables:
+      - name: release
+        type: String
+        value: "2026.12"
+      - name: change_type
+        type: String
+        value: emergency
