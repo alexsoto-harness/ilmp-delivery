@@ -10,6 +10,7 @@ template:
     demo: ilmp
   description: SPDJI Eval stand-in plus OPA ilmp_release_gate_set. Runs in CI after build.
   spec:
+    stageType: CI
     steps:
       - step:
           type: Run

@@ -88,9 +88,11 @@ template:
                     level: info
                 privileged: true
                 image:
-                  type: private
+                  type: aws_ecr
                   name: 759984737373.dkr.ecr.us-east-1.amazonaws.com/ilmp/<+pipeline.variables.component>
                   tag: RC-<+pipeline.variables.component>-<+pipeline.sequenceId>-<+codebase.shortCommitSha>
+                  connectorRef: account.aws_oidc_iacm
+                  region: us-east-1
           - step:
               type: Run
               name: Export image identity
