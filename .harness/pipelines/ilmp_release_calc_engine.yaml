@@ -55,7 +55,8 @@ pipeline:
                     versionLabel: v1
         failureStrategies:
           - onFailure:
-              errors: [AllErrors]
+              errors:
+                - AllErrors
               action:
                 type: MarkAsFailure
     - stage:
@@ -72,7 +73,6 @@ pipeline:
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: ecr_calc
                       sources:
                         - identifier: ecr_calc
                           type: Ecr
@@ -127,7 +127,8 @@ pipeline:
                   spec: {}
         failureStrategies:
           - onFailure:
-              errors: [AllErrors]
+              errors:
+                - AllErrors
               action:
                 type: StageRollback
     - stage:
@@ -146,7 +147,8 @@ pipeline:
                     approvalMessage: Approve calc-engine for QA
                     includePipelineExecutionHistory: true
                     approvers:
-                      userGroups: [account._account_all_users]
+                      userGroups:
+                        - account._account_all_users
                       minimumCount: 1
                       disallowPipelineExecutor: false
                     isAutoRejectEnabled: false
@@ -164,7 +166,6 @@ pipeline:
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: ecr_calc
                       sources:
                         - identifier: ecr_calc
                           type: Ecr
@@ -219,7 +220,8 @@ pipeline:
                   spec: {}
         failureStrategies:
           - onFailure:
-              errors: [AllErrors]
+              errors:
+                - AllErrors
               action:
                 type: StageRollback
     - stage:
@@ -236,7 +238,6 @@ pipeline:
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: ecr_calc
                       sources:
                         - identifier: ecr_calc
                           type: Ecr
@@ -302,7 +303,8 @@ pipeline:
                   spec: {}
         failureStrategies:
           - onFailure:
-              errors: [AllErrors]
+              errors:
+                - AllErrors
               action:
                 type: StageRollback
     - stage:
@@ -321,7 +323,8 @@ pipeline:
                     approvalMessage: Approve calc-engine for UAT
                     includePipelineExecutionHistory: true
                     approvers:
-                      userGroups: [account._account_all_users]
+                      userGroups:
+                        - account._account_all_users
                       minimumCount: 1
                       disallowPipelineExecutor: false
                     isAutoRejectEnabled: false
@@ -339,7 +342,6 @@ pipeline:
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: ecr_calc
                       sources:
                         - identifier: ecr_calc
                           type: Ecr
@@ -394,7 +396,8 @@ pipeline:
                   spec: {}
         failureStrategies:
           - onFailure:
-              errors: [AllErrors]
+              errors:
+                - AllErrors
               action:
                 type: StageRollback
     - stage:
@@ -413,7 +416,8 @@ pipeline:
                     approvalMessage: Approve Prod release (ServiceNow deferred)
                     includePipelineExecutionHistory: true
                     approvers:
-                      userGroups: [account._account_all_users]
+                      userGroups:
+                        - account._account_all_users
                       minimumCount: 1
                       disallowPipelineExecutor: false
                     isAutoRejectEnabled: false
@@ -431,7 +435,6 @@ pipeline:
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: ecr_calc
                       sources:
                         - identifier: ecr_calc
                           type: Ecr
@@ -454,7 +457,8 @@ pipeline:
                     approvalMessage: Confirm change record for Prod
                     includePipelineExecutionHistory: true
                     approvers:
-                      userGroups: [account._account_all_users]
+                      userGroups:
+                        - account._account_all_users
                       minimumCount: 1
                       disallowPipelineExecutor: false
                     isAutoRejectEnabled: false
@@ -502,7 +506,8 @@ pipeline:
                     approvalMessage: Approve shift to 100%
                     includePipelineExecutionHistory: true
                     approvers:
-                      userGroups: [account._account_all_users]
+                      userGroups:
+                        - account._account_all_users
                       minimumCount: 1
                       disallowPipelineExecutor: false
                     isAutoRejectEnabled: false
@@ -550,6 +555,7 @@ pipeline:
                   spec: {}
         failureStrategies:
           - onFailure:
-              errors: [AllErrors]
+              errors:
+                - AllErrors
               action:
                 type: StageRollback
