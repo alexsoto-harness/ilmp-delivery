@@ -8,8 +8,8 @@ locals {
   }
 
   svc_bluegreen = {
-    svc-qadr = { prod_port = 8093, stage_port = 9093, health = "/actuator/health" }
-    svc-prod = { prod_port = 8095, stage_port = 9095, health = "/actuator/health" }
+    svc-qadr = { prod_port = 8093, stage_port = 9093, health = "/actuator/health", traffic_shift = false }
+    svc-prod = { prod_port = 8095, stage_port = 9095, health = "/actuator/health", traffic_shift = true }
   }
 
   svc_bg_target_groups = merge([
@@ -104,21 +104,29 @@ resource "aws_lb_listener_rule" "svc_bg_prod" {
       values = ["/*"]
     }
   }
-  action {
-    type = "forward"
-    forward {
-      target_group {
-        arn    = aws_lb_target_group.svc_bluegreen["${each.key}-blue"].arn
-        weight = 100
-      }
-      target_group {
-        arn    = aws_lb_target_group.svc_bluegreen["${each.key}-green"].arn
-        weight = 0
-      }
+  # Same constraint as the calc-engine prod rules: QADR needs one target group.
+  dynamic "action" {
+    for_each = each.value.traffic_shift ? [] : [1]
+    content {
+      type             = "forward"
+      target_group_arn = aws_lb_target_group.svc_bluegreen["${each.key}-blue"].arn
     }
   }
-  lifecycle {
-    ignore_changes = [action]
+  dynamic "action" {
+    for_each = each.value.traffic_shift ? [1] : []
+    content {
+      type = "forward"
+      forward {
+        target_group {
+          arn    = aws_lb_target_group.svc_bluegreen["${each.key}-blue"].arn
+          weight = 100
+        }
+        target_group {
+          arn    = aws_lb_target_group.svc_bluegreen["${each.key}-green"].arn
+          weight = 0
+        }
+      }
+    }
   }
 }
 

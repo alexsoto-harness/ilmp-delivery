@@ -1,8 +1,9 @@
 # ILMP demo estate: default VPC (quota), one Fargate cluster, one ALB.
 #
 # Shared infrastructure only. Harness CD owns ECS task definitions and
-# services; a routine release never runs tofu apply. Listener rules used by
-# blue/green stages ignore action changes because Harness shifts their weights.
+# services; a routine release never runs tofu apply. Prod listener-rule actions
+# are not ignored on this apply so QADR can switch from a weighted forward to a
+# single target group. Stage rules still ignore action changes.
 
 locals {
   tags = {
@@ -22,11 +23,11 @@ locals {
     svc-qa   = { port = 8092, health = "/actuator/health" }
   }
 
-  # Blue/green targets: a prod listener rule weighted across blue and green,
-  # and a stage listener rule on green for pre-shift checks.
+  # QADR swaps one target group per rule. Prod shifts traffic, so its prod
+  # rule stays weighted across blue and green.
   bluegreen = {
-    calc-qadr = { prod_port = 8083, stage_port = 9083 }
-    calc-prod = { prod_port = 80, stage_port = 8080 }
+    calc-qadr = { prod_port = 8083, stage_port = 9083, traffic_shift = false }
+    calc-prod = { prod_port = 80, stage_port = 8080, traffic_shift = true }
   }
 
   bg_target_groups = merge([
@@ -263,21 +264,30 @@ resource "aws_lb_listener_rule" "bg_prod" {
       values = ["/*"]
     }
   }
-  action {
-    type = "forward"
-    forward {
-      target_group {
-        arn    = aws_lb_target_group.bluegreen["${each.key}-blue"].arn
-        weight = 100
-      }
-      target_group {
-        arn    = aws_lb_target_group.bluegreen["${each.key}-green"].arn
-        weight = 0
-      }
+  # Harness swap reads Action.TargetGroupArn. A weighted forward leaves that
+  # field empty, so QADR BG create rejects the rule. Traffic shift needs both.
+  dynamic "action" {
+    for_each = each.value.traffic_shift ? [] : [1]
+    content {
+      type             = "forward"
+      target_group_arn = aws_lb_target_group.bluegreen["${each.key}-blue"].arn
     }
   }
-  lifecycle {
-    ignore_changes = [action]
+  dynamic "action" {
+    for_each = each.value.traffic_shift ? [1] : []
+    content {
+      type = "forward"
+      forward {
+        target_group {
+          arn    = aws_lb_target_group.bluegreen["${each.key}-blue"].arn
+          weight = 100
+        }
+        target_group {
+          arn    = aws_lb_target_group.bluegreen["${each.key}-green"].arn
+          weight = 0
+        }
+      }
+    }
   }
 }
 
