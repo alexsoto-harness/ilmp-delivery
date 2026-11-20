@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # FR-009 smoke backtest: POST /backtest, poll until COMPLETED. Anything else
 # (FAILED, timeout, unreachable) exits 1 so the stage rolls back.
+# Requests retry on 503: during a Prod traffic shift the ALB answers 503 for the
+# share weighted to a target group with no targets (the first Prod release has
+# no blue service).
 # Usage: smoke-backtest.sh BASE_URL [DAYS] [TIMEOUT_SECONDS]
 set -euo pipefail
+
+RETRY=(--retry 15 --retry-delay 1 --retry-max-time 60)
 
 BASE_URL="${1:?base url}"
 DAYS="${2:-3}"
@@ -10,7 +15,7 @@ TIMEOUT="${3:-120}"
 
 field() { sed -n "s/.*\"$1\": *\"\{0,1\}\([^\",}]*\).*/\1/p"; }
 
-job=$(curl -fsS -X POST "$BASE_URL/backtest" -H 'Content-Type: application/json' \
+job=$(curl -fsS "${RETRY[@]}" -X POST "$BASE_URL/backtest" -H 'Content-Type: application/json' \
   -d "{\"index_id\":\"SPDJI-DEMO-50\",\"days\":$DAYS}")
 job_id=$(echo "$job" | field job_id)
 [ -n "$job_id" ] || { echo "no job_id in response: $job"; exit 1; }
@@ -18,7 +23,7 @@ echo "smoke backtest $job_id ($DAYS days) against $BASE_URL"
 
 deadline=$(( $(date +%s) + TIMEOUT ))
 while [ "$(date +%s)" -lt "$deadline" ]; do
-  body=$(curl -fsS "$BASE_URL/backtest/$job_id" || true)
+  body=$(curl -fsS "${RETRY[@]}" "$BASE_URL/backtest/$job_id" || true)
   status=$(echo "$body" | field status)
   echo "  status=$status"
   case "$status" in
