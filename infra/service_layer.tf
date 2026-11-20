@@ -128,6 +128,9 @@ resource "aws_lb_listener_rule" "svc_bg_prod" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [action]
+  }
 }
 
 resource "aws_lb_listener_rule" "svc_bg_stage" {

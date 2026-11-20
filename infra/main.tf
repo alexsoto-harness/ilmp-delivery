@@ -1,9 +1,8 @@
 # ILMP demo estate: default VPC (quota), one Fargate cluster, one ALB.
 #
 # Shared infrastructure only. Harness CD owns ECS task definitions and
-# services; a routine release never runs tofu apply. Prod listener-rule actions
-# are not ignored on this apply so QADR can switch from a weighted forward to a
-# single target group. Stage rules still ignore action changes.
+# services; a routine release never runs tofu apply. Listener-rule actions are
+# ignored because Harness swaps or shifts them after this estate is applied.
 
 locals {
   tags = {
@@ -288,6 +287,9 @@ resource "aws_lb_listener_rule" "bg_prod" {
         }
       }
     }
+  }
+  lifecycle {
+    ignore_changes = [action]
   }
 }
 
