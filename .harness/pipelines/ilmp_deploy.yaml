@@ -160,7 +160,8 @@ pipeline:
                   spec: {}
         failureStrategies:
           - onFailure:
-              errors: [AllErrors]
+              errors:
+                - AllErrors
               action:
                 type: StageRollback
     - stage:
@@ -185,7 +186,8 @@ pipeline:
                       service-layer <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_TAG>
                     includePipelineExecutionHistory: true
                     approvers:
-                      userGroups: [account._account_all_users]
+                      userGroups:
+                        - account._account_all_users
                       minimumCount: 1
                       disallowPipelineExecutor: false
                     isAutoRejectEnabled: false
@@ -295,7 +297,8 @@ pipeline:
                       spec: {}
             failureStrategies:
               - onFailure:
-                  errors: [AllErrors]
+                  errors:
+                    - AllErrors
                   action:
                     type: StageRollback
         - stage:
@@ -364,20 +367,12 @@ pipeline:
                         stageListenerRuleArn: <+serviceVariables.BG_QADR_STAGE_RULE_ARN>
                         sameAsAlreadyRunningInstances: false
                   - step:
-                      type: EcsBlueGreenSwapTargetGroups
-                      name: BG swap
-                      identifier: bg_swap
-                      timeout: 15m
-                      spec:
-                        doNotDownOldService: true
-                  - step:
                       type: ShellScript
                       name: verify_version
                       identifier: verify_version
                       timeout: 5m
                       spec:
                         shell: Bash
-                        onDelegate: true
                         delegateSelectors:
                           - harness-eks-delegate-parson
                         source:
@@ -388,6 +383,10 @@ pipeline:
                               D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>
                               rm -rf "$D" && git clone -q --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git "$D"
                               bash "$D/scripts/verify-version.sh" "<+serviceVariables.BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>"
+                        executionTarget: {}
+                        environmentVariables: []
+                        outputVariables: []
+                    contextType: Pipeline
                   - step:
                       type: ShellScript
                       name: smoke
@@ -405,6 +404,14 @@ pipeline:
                               set -e
                               D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>
                               bash "$D/scripts/<+serviceVariables.SMOKE_SCRIPT>" "<+serviceVariables.BASE_URL>" 3
+                    contextType: Pipeline
+                  - step:
+                      type: EcsBlueGreenSwapTargetGroups
+                      name: BG swap
+                      identifier: bg_swap
+                      timeout: 15m
+                      spec:
+                        doNotDownOldService: true
                 rollbackSteps:
                   - step:
                       type: EcsBlueGreenRollback
@@ -414,7 +421,8 @@ pipeline:
                       spec: {}
             failureStrategies:
               - onFailure:
-                  errors: [AllErrors]
+                  errors:
+                    - AllErrors
                   action:
                     type: StageRollback
     - stage:
@@ -439,7 +447,8 @@ pipeline:
                       service-layer <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_TAG>
                     includePipelineExecutionHistory: true
                     approvers:
-                      userGroups: [account._account_all_users]
+                      userGroups:
+                        - account._account_all_users
                       minimumCount: 1
                       disallowPipelineExecutor: false
                     isAutoRejectEnabled: false
@@ -548,7 +557,8 @@ pipeline:
                   spec: {}
         failureStrategies:
           - onFailure:
-              errors: [AllErrors]
+              errors:
+                - AllErrors
               action:
                 type: StageRollback
     - stage:
@@ -570,7 +580,8 @@ pipeline:
                       service-layer <+pipeline.stages.resolve.spec.execution.steps.read_release.output.outputVariables.SVC_TAG>
                     includePipelineExecutionHistory: true
                     approvers:
-                      userGroups: [account._account_all_users]
+                      userGroups:
+                        - account._account_all_users
                       minimumCount: 1
                       disallowPipelineExecutor: false
                     isAutoRejectEnabled: false
@@ -639,7 +650,8 @@ pipeline:
                     approvalMessage: Confirm the change record for this Prod release
                     includePipelineExecutionHistory: true
                     approvers:
-                      userGroups: [account._account_all_users]
+                      userGroups:
+                        - account._account_all_users
                       minimumCount: 1
                       disallowPipelineExecutor: false
                     isAutoRejectEnabled: false
@@ -679,33 +691,6 @@ pipeline:
                         weightPercentage: 50
                         downsizeOldService: false
               - step:
-                  type: HarnessApproval
-                  name: Support before 100
-                  identifier: support_100
-                  timeout: 1d
-                  when:
-                    stageStatus: Success
-                    condition: <+serviceVariables.COMPONENT> == "calc-engine"
-                  spec:
-                    approvalMessage: Approve the shift to 100%
-                    includePipelineExecutionHistory: true
-                    approvers:
-                      userGroups: [account._account_all_users]
-                      minimumCount: 1
-                      disallowPipelineExecutor: false
-                    isAutoRejectEnabled: false
-              - step:
-                  type: EcsBlueGreenTrafficShift
-                  name: traffic 100
-                  identifier: shift_100
-                  timeout: 15m
-                  spec:
-                    ecsTrafficShiftWrapper:
-                      type: Inherit
-                      spec:
-                        weightPercentage: 100
-                        downsizeOldService: false
-              - step:
                   type: ShellScript
                   name: verify_version
                   identifier: verify_version
@@ -723,6 +708,7 @@ pipeline:
                           D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>
                           rm -rf "$D" && git clone -q --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git "$D"
                           bash "$D/scripts/verify-version.sh" "<+serviceVariables.BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>"
+                contextType: Pipeline
               - step:
                   type: ShellScript
                   name: smoke 10-day
@@ -740,6 +726,35 @@ pipeline:
                           set -e
                           D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>
                           bash "$D/scripts/<+serviceVariables.SMOKE_SCRIPT>" "<+serviceVariables.BASE_URL>" 10
+                contextType: Pipeline
+              - step:
+                  type: HarnessApproval
+                  name: Support before 100
+                  identifier: support_100
+                  timeout: 1d
+                  when:
+                    stageStatus: Success
+                    condition: <+serviceVariables.COMPONENT> == "calc-engine"
+                  spec:
+                    approvalMessage: Approve the shift to 100%
+                    includePipelineExecutionHistory: true
+                    approvers:
+                      userGroups:
+                        - account._account_all_users
+                      minimumCount: 1
+                      disallowPipelineExecutor: false
+                    isAutoRejectEnabled: false
+              - step:
+                  type: EcsBlueGreenTrafficShift
+                  name: traffic 100
+                  identifier: shift_100
+                  timeout: 15m
+                  spec:
+                    ecsTrafficShiftWrapper:
+                      type: Inherit
+                      spec:
+                        weightPercentage: 100
+                        downsizeOldService: false
             rollbackSteps:
               - step:
                   type: EcsBlueGreenRollback
@@ -749,6 +764,7 @@ pipeline:
                   spec: {}
         failureStrategies:
           - onFailure:
-              errors: [AllErrors]
+              errors:
+                - AllErrors
               action:
                 type: StageRollback
