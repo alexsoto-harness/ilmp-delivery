@@ -38,7 +38,7 @@ pipeline:
         identifier: release_gate
         type: CI
         spec:
-          cloneCodebase: true
+          cloneCodebase: false
           platform:
             os: Linux
             arch: Amd64
