@@ -1,0 +1,16 @@
+infrastructureDefinition:
+  name: ilmp_prod_ecs
+  identifier: ilmp_prod_ecs
+  orgIdentifier: sandbox
+  projectIdentifier: soto_sandbox
+  environmentRef: ilmp_prod
+  deploymentType: ECS
+  type: ECS
+  tags:
+    customer: spdji
+    demo: ilmp
+  spec:
+    connectorRef: account.aws_oidc_iacm
+    region: us-east-1
+    cluster: ilmp-demo
+  allowSimultaneousDeployments: false
