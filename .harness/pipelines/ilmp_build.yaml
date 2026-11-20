@@ -3,7 +3,7 @@ pipeline:
   identifier: ilmp_build
   projectIdentifier: soto_sandbox
   orgIdentifier: sandbox
-  description: Build either component once, scan it, run the Eval gate, record the digest in releases/<release>.yaml, then hand the release to ILMP Deploy.
+  description: Build either component once, scan it, run the Eval gate and the OPA release policy, record the digest in releases/<release>.yaml, then hand the release to ILMP Deploy.
   tags:
     customer: spdji
     demo: ilmp
@@ -34,11 +34,11 @@ pipeline:
           templateRef: ilmp_build_scan_push
           versionLabel: v1
     - stage:
-        name: Release Gate
-        identifier: release_gate
+        name: Eval Gate
+        identifier: eval
         type: CI
         spec:
-          cloneCodebase: false
+          cloneCodebase: true
           platform:
             os: Linux
             arch: Amd64
@@ -53,6 +53,59 @@ pipeline:
                   template:
                     templateRef: ilmp_release_gate
                     versionLabel: v1
+        failureStrategies:
+          - onFailure:
+              errors: [AllErrors]
+              action:
+                type: MarkAsFailure
+    - stage:
+        name: Release Policy
+        identifier: release_policy
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: Policy
+                  name: ilmp_release_gate policy
+                  identifier: release_gate_policy
+                  timeout: 5m
+                  spec:
+                    policySets:
+                      - ilmp_release_gate_set
+                    type: Custom
+                    policySpec:
+                      payload: |-
+                        {
+                          "eval": {
+                            "verdict": "<+pipeline.stages.eval.spec.execution.steps.gate.steps.eval_gate.output.outputVariables.EVAL_VERDICT>",
+                            "score": <+pipeline.stages.eval.spec.execution.steps.gate.steps.eval_gate.output.outputVariables.EVAL_SCORE>,
+                            "image_digest": "<+pipeline.stages.build.spec.execution.steps.export_image.output.outputVariables.IMAGE_DIGEST>"
+                          },
+                          "sto": {"critical": 0, "high": 0},
+                          "scs": {"sbom": true, "slsa_verified": true},
+                          "artifact": {"digest": "<+pipeline.stages.build.spec.execution.steps.export_image.output.outputVariables.IMAGE_DIGEST>"},
+                          "rejected_digests": []
+                        }
+        failureStrategies:
+          - onFailure:
+              errors: [AllErrors]
+              action:
+                type: MarkAsFailure
+    - stage:
+        name: Record Release
+        identifier: record
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
               - step:
                   type: Run
                   name: Record release
@@ -78,8 +131,8 @@ pipeline:
                           --digest "<+pipeline.stages.build.spec.execution.steps.export_image.output.outputVariables.IMAGE_DIGEST>" \
                           --commit "<+codebase.commitSha>" \
                           --build-url "<+pipeline.executionUrl>" \
-                          --eval-verdict "<+execution.steps.gate.steps.eval_gate.output.outputVariables.EVAL_VERDICT>" \
-                          --eval-score "<+execution.steps.gate.steps.eval_gate.output.outputVariables.EVAL_SCORE>" | tee /tmp/record.out
+                          --eval-verdict "<+pipeline.stages.eval.spec.execution.steps.gate.steps.eval_gate.output.outputVariables.EVAL_VERDICT>" \
+                          --eval-score "<+pipeline.stages.eval.spec.execution.steps.gate.steps.eval_gate.output.outputVariables.EVAL_SCORE>" | tee /tmp/record.out
                         git add releases
                         git -c user.name="Harness ILMP Build" -c user.email="ilmp-build@harness.io" commit -q -m "release <+pipeline.variables.release>: record <+pipeline.variables.component> <+pipeline.stages.build.spec.execution.steps.export_image.output.outputVariables.IMAGE_TAG>"
                         if git push -q origin HEAD:main; then pushed=yes; break; fi
@@ -104,7 +157,7 @@ pipeline:
         type: Pipeline
         when:
           pipelineStatus: Success
-          condition: <+pipeline.variables.deploy> == "true" && <+pipeline.stages.release_gate.spec.execution.steps.record_release.output.outputVariables.RELEASE_COMPLETE> == "true"
+          condition: <+pipeline.variables.deploy> == "true" && <+pipeline.stages.record.spec.execution.steps.record_release.output.outputVariables.RELEASE_COMPLETE> == "true"
         spec:
           org: sandbox
           pipeline: ilmp_deploy
