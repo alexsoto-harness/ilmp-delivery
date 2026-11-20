@@ -43,7 +43,7 @@ pipeline:
                       set -e
                       if [ -f requirements.txt ]; then
                         pip install -q -r requirements.txt pytest
-                        pytest -q --junitxml=test-results.xml
+                        python3 -m pytest -q --junitxml=test-results.xml
                       elif [ -f pom.xml ]; then
                         mvn -B -q test
                       fi
