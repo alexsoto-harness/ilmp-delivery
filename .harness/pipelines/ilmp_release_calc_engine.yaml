@@ -261,8 +261,7 @@ pipeline:
                     prodListenerRuleArn: <+env.variables.bg_prod_rule_arn>
                     stageListener: <+env.variables.bg_stage_listener_arn>
                     stageListenerRuleArn: <+env.variables.bg_stage_rule_arn>
-                    isSameAsAlreadyRunningInstances: false
-                    enableAutoScalingInGreenService: false
+                    sameAsAlreadyRunningInstances: false
               - step:
                   type: ShellScript
                   name: verify_version
@@ -470,22 +469,30 @@ pipeline:
                     prodListenerRuleArn: <+env.variables.bg_prod_rule_arn>
                     stageListener: <+env.variables.bg_stage_listener_arn>
                     stageListenerRuleArn: <+env.variables.bg_stage_rule_arn>
-                    isSameAsAlreadyRunningInstances: false
-                    enableAutoScalingInGreenService: false
+                    sameAsAlreadyRunningInstances: false
+                    isTrafficShift: true
               - step:
                   type: EcsBlueGreenTrafficShift
                   name: traffic 10
                   identifier: shift_10
                   timeout: 15m
                   spec:
-                    weightPercentage: 10
+                    ecsTrafficShiftWrapper:
+                      type: Inherit
+                      spec:
+                        weightPercentage: 10
+                        downsizeOldService: false
               - step:
                   type: EcsBlueGreenTrafficShift
                   name: traffic 50
                   identifier: shift_50
                   timeout: 15m
                   spec:
-                    weightPercentage: 50
+                    ecsTrafficShiftWrapper:
+                      type: Inherit
+                      spec:
+                        weightPercentage: 50
+                        downsizeOldService: false
               - step:
                   type: HarnessApproval
                   name: Support before 100
@@ -505,7 +512,11 @@ pipeline:
                   identifier: shift_100
                   timeout: 15m
                   spec:
-                    weightPercentage: 100
+                    ecsTrafficShiftWrapper:
+                      type: Inherit
+                      spec:
+                        weightPercentage: 100
+                        downsizeOldService: true
               - step:
                   type: ShellScript
                   name: verify_version

@@ -47,8 +47,8 @@ template:
                 prodListenerRuleArn: <+input>
                 stageListener: <+input>
                 stageListenerRuleArn: <+input>
-                isSameAsAlreadyRunningInstances: false
-                enableAutoScalingInGreenService: false
+                sameAsAlreadyRunningInstances: false
+                isTrafficShift: true
           - step:
               type: EcsBlueGreenTrafficShift
               name: traffic shift
