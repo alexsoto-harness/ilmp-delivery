@@ -48,7 +48,7 @@ service:
                   gitFetchType: Branch
                   branch: main
                   paths:
-                    - deploy/ecs/service-definition.yaml
+                    - 'deploy/ecs/<+<+env.identifier> == "ilmp_qadr" || <+env.identifier> == "ilmp_prod" ? "service-definition-bluegreen.yaml" : "service-definition.yaml">'
       variables:
         - name: COMPONENT
           type: String
