@@ -1,0 +1,89 @@
+pipeline:
+  name: ilmp_pr_checks
+  identifier: ilmp_pr_checks
+  projectIdentifier: soto_sandbox
+  orgIdentifier: sandbox
+  description: PR unit tests + light STO. Blocks critical findings before merge to release/*.
+  tags:
+    customer: spdji
+    demo: ilmp
+  properties:
+    ci:
+      codebase:
+        connectorRef: ghalexsotoharnessfinegrained
+        repoName: <+input>
+        build: <+input>
+  variables:
+    - name: component
+      type: String
+      value: <+input>
+  stages:
+    - stage:
+        name: PR Checks
+        identifier: pr_checks
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Unit tests
+                  identifier: unit_tests
+                  timeout: 15m
+                  spec:
+                    shell: Sh
+                    command: |-
+                      set -e
+                      if [ -f requirements.txt ]; then
+                        pip install -q -r requirements.txt pytest
+                        pytest -q --junitxml=test-results.xml
+                      elif [ -f pom.xml ]; then
+                        mvn -B -q test
+                      fi
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - "**/test-results.xml"
+                          - "**/surefire-reports/*.xml"
+              - step:
+                  type: OsvScanner
+                  name: OSV SCA
+                  identifier: osv
+                  timeout: 10m
+                  spec:
+                    mode: orchestration
+                    config: default
+                    target:
+                      type: repository
+                      detection: auto
+                    advanced:
+                      log:
+                        level: info
+              - step:
+                  type: Gitleaks
+                  name: Gitleaks
+                  identifier: gitleaks
+                  timeout: 10m
+                  spec:
+                    mode: orchestration
+                    config: default
+                    target:
+                      type: repository
+                      detection: auto
+                    advanced:
+                      log:
+                        level: info
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: MarkAsFailure

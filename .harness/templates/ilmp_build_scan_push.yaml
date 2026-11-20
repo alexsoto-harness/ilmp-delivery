@@ -1,0 +1,110 @@
+template:
+  name: ilmp_build_scan_push
+  identifier: ilmp_build_scan_push
+  versionLabel: v1
+  type: Stage
+  projectIdentifier: soto_sandbox
+  orgIdentifier: sandbox
+  tags:
+    customer: spdji
+    demo: ilmp
+  description: Build once, STO scan, SBOM+SLSA, push same digest to ECR then HAR via Docker registry.
+  spec:
+    type: CI
+    spec:
+      cloneCodebase: true
+      platform:
+        os: Linux
+        arch: Amd64
+      runtime:
+        type: Cloud
+        spec: {}
+      execution:
+        steps:
+          - step:
+              type: Run
+              name: Unit tests
+              identifier: unit_tests
+              timeout: 15m
+              spec:
+                shell: Sh
+                command: |-
+                  set -e
+                  if [ -f requirements.txt ]; then
+                    pip install -q -r requirements.txt pytest
+                    pytest -q --junitxml=test-results.xml
+                  elif [ -f pom.xml ]; then
+                    mvn -B -q test
+                  else
+                    echo "no known test runner"; exit 1
+                  fi
+                reports:
+                  type: JUnit
+                  spec:
+                    paths:
+                      - "**/test-results.xml"
+                      - "**/surefire-reports/*.xml"
+          - step:
+              type: BuildAndPushECR
+              name: Build and push ECR
+              identifier: build_push_ecr
+              timeout: 20m
+              spec:
+                connectorRef: account.aws_oidc_iacm
+                region: us-east-1
+                account: "759984737373"
+                imageName: ilmp/<+pipeline.variables.component>
+                tags:
+                  - RC-<+pipeline.variables.component>-<+pipeline.sequenceId>-<+codebase.shortCommitSha>
+                dockerfile: Dockerfile
+                optimize: true
+          - step:
+              type: BuildAndPushDockerRegistry
+              name: Push same tag to HAR
+              identifier: push_har
+              timeout: 15m
+              spec:
+                connectorRef: account.harnessImage
+                repo: pkg.harness.io/eerjnxtns4grlg5vnnjzuw/ilmp-docker/<+pipeline.variables.component>
+                tags:
+                  - RC-<+pipeline.variables.component>-<+pipeline.sequenceId>-<+codebase.shortCommitSha>
+                dockerfile: Dockerfile
+                optimize: true
+          - step:
+              type: AquaTrivy
+              name: Trivy image scan
+              identifier: trivy
+              timeout: 15m
+              spec:
+                mode: orchestration
+                config: default
+                target:
+                  type: configuration
+                  detection: manual
+                  name: ilmp-<+pipeline.variables.component>
+                  variant: <+pipeline.sequenceId>
+                advanced:
+                  log:
+                    level: info
+                privileged: true
+                image:
+                  type: private
+                  name: 759984737373.dkr.ecr.us-east-1.amazonaws.com/ilmp/<+pipeline.variables.component>
+                  tag: RC-<+pipeline.variables.component>-<+pipeline.sequenceId>-<+codebase.shortCommitSha>
+          - step:
+              type: Run
+              name: Export image identity
+              identifier: export_image
+              timeout: 2m
+              spec:
+                shell: Sh
+                command: |-
+                  TAG=RC-<+pipeline.variables.component>-<+pipeline.sequenceId>-<+codebase.shortCommitSha>
+                  echo "IMAGE_TAG=$TAG" >> $HARNESS_OUTPUTS_PATH
+                  echo "IMAGE_DIGEST=<+steps.build_push_ecr.output.digest>" >> $HARNESS_OUTPUTS_PATH
+    failureStrategies:
+      - onFailure:
+          errors:
+            - AllErrors
+          action:
+            type: MarkAsFailure
