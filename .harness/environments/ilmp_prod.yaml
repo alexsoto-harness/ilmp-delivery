@@ -4,7 +4,7 @@ environment:
   orgIdentifier: sandbox
   projectIdentifier: soto_sandbox
   type: Production
-  description: ILMP prod environment. Variables filled from ilmp_demo_estate tofu outputs after apply.
+  description: ILMP prod environment. Variables from ilmp_demo_estate tofu outputs.
   tags:
     customer: spdji
     demo: ilmp
@@ -14,40 +14,40 @@ environment:
       value: prod
     - name: ilmp_task_sg
       type: String
-      value: PENDING
+      value: sg-09a3a15b3d842638f
     - name: ilmp_subnet_a
       type: String
-      value: PENDING
+      value: subnet-35b30f7f
     - name: ilmp_subnet_b
       type: String
-      value: PENDING
+      value: subnet-5b826a07
     - name: calc_tg_arn
       type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:targetgroup/ilmp-calc-prod-blue/a1991c5adbfa91ab
     - name: svc_tg_arn
       type: String
       value: PENDING
     - name: alb_dns
       type: String
-      value: PENDING
+      value: ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com
     - name: alb_arn
       type: String
-      value: PENDING
-    - name: base_url_calc
-      type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:loadbalancer/app/ilmp-demo-alb/f3c915c2d376d66b
     - name: base_url_svc
       type: String
       value: PENDING
     - name: bg_prod_listener_arn
       type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener/app/ilmp-demo-alb/f3c915c2d376d66b/b9d54234f6e0be8e
     - name: bg_prod_rule_arn
       type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener-rule/app/ilmp-demo-alb/f3c915c2d376d66b/b9d54234f6e0be8e/7d6049da2f10c964
     - name: bg_stage_listener_arn
       type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener/app/ilmp-demo-alb/f3c915c2d376d66b/bfb36b56c21fe21a
     - name: bg_stage_rule_arn
       type: String
-      value: PENDING
+      value: arn:aws:elasticloadbalancing:us-east-1:759984737373:listener-rule/app/ilmp-demo-alb/f3c915c2d376d66b/bfb36b56c21fe21a/96b3c75258675713
+    - name: base_url_calc
+      type: String
+      value: http://ilmp-demo-alb-1285553435.us-east-1.elb.amazonaws.com:80
