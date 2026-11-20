@@ -87,3 +87,6 @@ pipeline:
                 - AllErrors
               action:
                 type: MarkAsFailure
+        sendGitStatus:
+          enabled: true
+          name: HARNESS PR CHECKS
