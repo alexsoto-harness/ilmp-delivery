@@ -6,6 +6,9 @@
 set -euo pipefail
 
 release="${1:?release}"
+# A quoted release id ("2026.12") is not a filename. Strip one layer of quotes.
+release="${release#\"}"
+release="${release%\"}"
 dir="${2:-$(dirname "$0")/../releases}"
 file="$dir/$release.yaml"
 [ -f "$file" ] || { echo "no release manifest $file" >&2; exit 1; }
