@@ -9,3 +9,12 @@ components:
     eval_verdict: "PASS"
     eval_score: "100"
     recorded_at: "2026-11-20T03:56:30Z"
+  service-layer:
+    image: "759984737373.dkr.ecr.us-east-1.amazonaws.com/ilmp/service-layer"
+    tag: "2026.12-cc88a77-12"
+    digest: "sha256:d4e84a3d24c64b30f9018323fcd753751ab9ab0dafbedb3e63178420e5ca8f1a"
+    commit: "cc88a770464a165cf6d1796d3414c4c7006ee3b1"
+    build_url: "https://app.harness.io/ng/#/account/EeRjnXTnS4GrLG5VNNJZUw/ci/orgs/sandbox/projects/soto_sandbox/pipelines/ilmp_build/executions/RDktAw1iT7aPkvD5wTzQHg/pipeline"
+    eval_verdict: "PASS"
+    eval_score: "100"
+    recorded_at: "2026-11-20T04:06:56Z"
