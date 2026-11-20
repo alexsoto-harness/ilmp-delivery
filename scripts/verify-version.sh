@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # FR-008 verify: the endpoint must report the digest this pipeline deployed on
 # 3 consecutive reads (so no old task is still answering behind the ALB).
-# Usage: verify-version.sh VERSION_URL EXPECTED_DIGEST [EXPECTED_TASKDEF] [TIMEOUT_SECONDS]
+# REQUIRED_STREAK=1 only proves the new version answers at all; Prod uses it
+# after the 10% traffic shift, where most reads still reach the old version.
+# Usage: verify-version.sh VERSION_URL EXPECTED_DIGEST [EXPECTED_TASKDEF] [TIMEOUT_SECONDS] [REQUIRED_STREAK]
 set -euo pipefail
 
 URL="${1:?version url}"
 EXPECTED="${2:?expected digest}"
 EXPECTED_TASKDEF="${3:-}"
 TIMEOUT="${4:-180}"
+REQUIRED="${5:-3}"
 
 field() { sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p"; }
 
@@ -19,8 +22,8 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
   taskdef=$(echo "$body" | field task_definition)
   if [ "$digest" = "$EXPECTED" ] && { [ -z "$EXPECTED_TASKDEF" ] || [ "$taskdef" = "$EXPECTED_TASKDEF" ]; }; then
     streak=$((streak + 1))
-    echo "  match $streak/3: $digest $taskdef"
-    if [ "$streak" -ge 3 ]; then
+    echo "  match $streak/$REQUIRED: $digest $taskdef"
+    if [ "$streak" -ge "$REQUIRED" ]; then
       echo "verified: running $digest ($taskdef)"
       exit 0
     fi

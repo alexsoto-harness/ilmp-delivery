@@ -706,29 +706,8 @@ pipeline:
                     loadBalancer: <+env.variables.alb_name>
                     prodListener: <+serviceVariables.BG_PROD_PROD_LISTENER_ARN>
                     prodListenerRuleArn: <+serviceVariables.BG_PROD_PROD_RULE_ARN>
-                    stageListener: <+serviceVariables.BG_PROD_STAGE_LISTENER_ARN>
-                    stageListenerRuleArn: <+serviceVariables.BG_PROD_STAGE_RULE_ARN>
                     sameAsAlreadyRunningInstances: false
                     isTrafficShift: true
-              - step:
-                  type: ShellScript
-                  name: verify_version
-                  identifier: verify_version
-                  timeout: 5m
-                  spec:
-                    shell: Bash
-                    onDelegate: true
-                    delegateSelectors:
-                      - harness-eks-delegate-parson
-                    source:
-                      type: Inline
-                      spec:
-                        script: |-
-                          set -e
-                          D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>
-                          rm -rf "$D" && git clone -q --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git "$D"
-                          bash "$D/scripts/verify-version.sh" "<+serviceVariables.BG_PROD_STAGE_BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>"
-                contextType: Pipeline
               - step:
                   type: EcsBlueGreenTrafficShift
                   name: traffic 10
@@ -742,6 +721,25 @@ pipeline:
                       spec:
                         weightPercentage: 10
                         downsizeOldService: false
+              - step:
+                  type: ShellScript
+                  name: verify_version
+                  identifier: verify_version
+                  timeout: 7m
+                  spec:
+                    shell: Bash
+                    onDelegate: true
+                    delegateSelectors:
+                      - harness-eks-delegate-parson
+                    source:
+                      type: Inline
+                      spec:
+                        script: |-
+                          set -e
+                          D=/tmp/ilmp-<+pipeline.executionId>-<+stage.identifier>
+                          rm -rf "$D" && git clone -q --depth 1 https://github.com/alexsoto-harness/ilmp-delivery.git "$D"
+                          bash "$D/scripts/verify-version.sh" "<+serviceVariables.BASE_URL><+serviceVariables.VERSION_PATH>" "<+serviceVariables.EXPECTED_DIGEST>" "" 300 1
+                contextType: Pipeline
               - step:
                   type: EcsBlueGreenTrafficShift
                   name: traffic 50

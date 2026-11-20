@@ -468,11 +468,9 @@ pipeline:
                   identifier: bg_create
                   timeout: 15m
                   spec:
-                    loadBalancer: <+env.variables.alb_arn>
+                    loadBalancer: <+env.variables.alb_name>
                     prodListener: <+env.variables.bg_prod_listener_arn>
                     prodListenerRuleArn: <+env.variables.bg_prod_rule_arn>
-                    stageListener: <+env.variables.bg_stage_listener_arn>
-                    stageListenerRuleArn: <+env.variables.bg_stage_rule_arn>
                     sameAsAlreadyRunningInstances: false
                     isTrafficShift: true
               - step:
